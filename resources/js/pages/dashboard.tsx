@@ -1,12 +1,16 @@
 import { Head } from '@inertiajs/react';
-import { CartesianGrid, Label, Line, LineChart, PolarAngleAxis, PolarRadiusAxis, RadialBar, RadialBarChart, XAxis } from 'recharts';
+import { Label, PolarAngleAxis, PolarRadiusAxis, RadialBar, RadialBarChart } from 'recharts';
 
 import { type BreadcrumbItem } from '@/types';
 
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { AdvancedParetoChart } from '../components/dashboard/advancedParetoChart';
+
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ChartConfig, ChartContainer } from '@/components/ui/chart';
 import AppLayout from '@/layouts/app-layout';
-import { TrendingUp } from 'lucide-react';
+import { MachineStatus } from '../components/dashboard/machineStatus';
+import { QualityTrend } from '../components/dashboard/qualityTrend';
+import { TopIssues } from '../components/dashboard/topIssues';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -533,7 +537,10 @@ const dashboardData = {
 };
 
 export default function Dashboard() {
-    const oee = 80;
+    const oee = 89;
+    const availability = 92;
+    const performance = 88;
+    const quality = 95;
     const chartData = [{ value: oee }];
 
     const prodTrendChartData = dashboardData.data.production.trends;
@@ -550,9 +557,9 @@ export default function Dashboard() {
                             </CardHeader>
                             <CardContent className="relative grid auto-rows-min gap-4 md:grid-cols-4">
                                 <HalfRadialChart label="Overall" chartData={chartData} value={oee} className="" />
-                                <HalfRadialChart label="Availability" chartData={chartData} value={oee} />
-                                <HalfRadialChart label="Performance" chartData={chartData} value={oee} />
-                                <HalfRadialChart label="Quality" chartData={chartData} value={oee} />
+                                <HalfRadialChart label="Availability" chartData={chartData} value={availability} />
+                                <HalfRadialChart label="Performance" chartData={chartData} value={performance} />
+                                <HalfRadialChart label="Quality" chartData={chartData} value={quality} />
                             </CardContent>
                         </Card>
                     </div>
@@ -580,9 +587,14 @@ export default function Dashboard() {
                 </div>
                 <div className="grid gap-4 overflow-hidden rounded-xl md:grid-cols-2 dark:border-sidebar-border">
                     <Card>
+                        <MachineStatus />
+                        <QualityTrend />
+                        <TopIssues />
+                    </Card>
+                    {/* <Card>
                         <CardHeader>
                             <CardTitle>Production Total</CardTitle>
-                            {/* <CardDescription>5 Month</CardDescription> */}
+                       
                         </CardHeader>
                         <CardContent>
                             <ChartContainer className="h-[250px] w-full" config={prodTrendChartConfig}>
@@ -664,7 +676,8 @@ export default function Dashboard() {
                             </div>
                             <div className="leading-none text-muted-foreground">Showing total visitors for the last 6 months</div>
                         </CardFooter>
-                    </Card>
+                    </Card> */}
+                    <AdvancedParetoChart />
                 </div>
             </div>
         </AppLayout>

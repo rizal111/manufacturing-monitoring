@@ -4,6 +4,7 @@ import { Label, PolarAngleAxis, PolarRadiusAxis, RadialBar, RadialBarChart } fro
 import { type BreadcrumbItem } from '@/types';
 
 import { AdvancedParetoChart } from '../components/dashboard/advancedParetoChart';
+import { TotalProductionGraph } from '../components/dashboard/productionTotal';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartConfig, ChartContainer } from '@/components/ui/chart';
@@ -585,6 +586,7 @@ export default function Dashboard() {
                         </Card>
                     </div> */}
                 </div>
+                <TotalProductionGraph />
                 <div className="grid gap-4 overflow-hidden rounded-xl md:grid-cols-2 dark:border-sidebar-border">
                     <Card>
                         <MachineStatus />

@@ -48,7 +48,7 @@ const chartConfig = {
         color: 'var(--chart-1)',
     },
     cumulativePercentage: {
-        label: 'Cumulative',
+        label: 'Cumulative %',
         color: 'var(--chart-5)',
     },
 } satisfies ChartConfig;
@@ -84,7 +84,7 @@ export function AdvancedParetoChart() {
 
                 <ChartContainer config={chartConfig} className="w-full">
                     <ResponsiveContainer width="100%" height="100%">
-                        <ComposedChart data={data} margin={{ top: 20, right: 20, bottom: 80, left: 20 }}>
+                        <ComposedChart data={data} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
                             <defs>
                                 <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
                                     <stop offset="0%" stopColor="var(--chart-1)" stopOpacity={0.8} />
@@ -147,23 +147,12 @@ export function AdvancedParetoChart() {
                                 />
                             )}
 
-                            <ChartTooltip
-                                content={
-                                    <ChartTooltipContent
-                                        formatter={(value, name) => {
-                                            if (name === 'Downtime') {
-                                                return [`${value} hours `, 'Downtime'];
-                                            }
-                                            return [`${value}% `, name];
-                                        }}
-                                    />
-                                }
-                            />
+                            <ChartTooltip content={<ChartTooltipContent />} />
 
                             <Legend wrapperStyle={{ paddingTop: '20px' }} iconType="rect" />
 
                             {/* Bars for downtime */}
-                            <Bar yAxisId="left" dataKey="downtime" fill="var(--color-downtime)" name="Downtime" radius={4} />
+                            <Bar yAxisId="left" dataKey="downtime" fill="var(--color-downtime)" radius={4} />
 
                             {/* Line for cumulative percentage */}
                             <Line
@@ -173,7 +162,6 @@ export function AdvancedParetoChart() {
                                 stroke="var(--color-cumulativePercentage)"
                                 strokeWidth={2}
                                 dot={{ fill: 'var(--color-cumulativePercentage)' }}
-                                name="Cumulative"
                                 activeDot={{ r: 6 }}
                             />
                         </ComposedChart>

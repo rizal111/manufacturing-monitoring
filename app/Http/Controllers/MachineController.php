@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Machine;
@@ -13,8 +13,8 @@ use App\Services\DowntimeAnalysisService;
 use App\Events\MachineStatusUpdated;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
 
 class MachineController extends Controller
 {
@@ -23,7 +23,7 @@ class MachineController extends Controller
         private DowntimeAnalysisService $downtimeService
     ) {}
 
-    public function index(Request $request): JsonResponse
+    public function index(Request $request)
     {
         $query = Machine::with('productionLine');
 
@@ -49,17 +49,31 @@ class MachineController extends Controller
             });
         }
 
-        $machines = $request->has('per_page')
-            ? $query->paginate($request->per_page)
-            : $query->get();
+        $machines = $query->paginate($request->get('per_page', 10));
 
-        return response()->json([
-            'success' => true,
-            'data' => $machines,
+        $productionLines = ProductionLine::where('is_active', true)
+            ->orderBy('name')
+            ->get();
+
+        return Inertia::render('machines/index', [
+            'machines' => $machines,
+            'productionLines' => $productionLines,
+            'filters' => $request->only(['line_id', 'status', 'is_active', 'search']),
         ]);
     }
 
-    public function store(StoreMachineRequest $request): JsonResponse
+    public function create()
+    {
+        $productionLines = ProductionLine::where('is_active', true)
+            ->orderBy('name')
+            ->get();
+
+        return Inertia::render('Machines/Create', [
+            'productionLines' => $productionLines,
+        ]);
+    }
+
+    public function store(StoreMachineRequest $request)
     {
         DB::beginTransaction();
 
@@ -78,23 +92,18 @@ class MachineController extends Controller
 
             DB::commit();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Machine created successfully',
-                'data' => $machine->load('productionLine'),
-            ], 201);
+            return redirect()->route('machines.index')
+                ->with('success', 'Machine created successfully');
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to create machine',
-                'error' => $e->getMessage(),
-            ], 500);
+            return back()->withErrors([
+                'error' => 'Failed to create machine: ' . $e->getMessage()
+            ])->withInput();
         }
     }
 
-    public function show(Machine $machine): JsonResponse
+    public function show(Machine $machine)
     {
         $machine->load([
             'productionLine',
@@ -111,7 +120,7 @@ class MachineController extends Controller
         ]);
 
         // Add statistics
-        $machine->statistics = [
+        $statistics = [
             'total_production_today' => $machine->productionOutputs()
                 ->whereDate('recorded_at', today())
                 ->sum('quantity_produced'),
@@ -124,13 +133,44 @@ class MachineController extends Controller
             'status_duration' => $machine->currentStatusDuration(),
         ];
 
-        return response()->json([
-            'success' => true,
-            'data' => $machine,
+        // Get OEE data
+        $oeeData = $this->oeeService->calculateMachineOEE(
+            $machine,
+            Carbon::now()->startOfDay(),
+            Carbon::now()
+        );
+
+        // Get reliability data
+        $mtbf = $this->downtimeService->getMTBF($machine, now()->startOfMonth(), now());
+        $mttr = $this->downtimeService->getMTTR($machine, now()->startOfMonth(), now());
+
+        $reliabilityData = [
+            'mtbf' => $mtbf,
+            'mttr' => $mttr,
+            'availability' => $mtbf > 0 ? round(($mtbf / ($mtbf + $mttr)) * 100, 2) : 0,
+        ];
+
+        return Inertia::render('Machines/Show', [
+            'machine' => $machine,
+            'statistics' => $statistics,
+            'oeeData' => $oeeData,
+            'reliabilityData' => $reliabilityData,
         ]);
     }
 
-    public function update(UpdateMachineRequest $request, Machine $machine): JsonResponse
+    public function edit(Machine $machine)
+    {
+        $productionLines = ProductionLine::where('is_active', true)
+            ->orderBy('name')
+            ->get();
+
+        return Inertia::render('Machines/Edit', [
+            'machine' => $machine->load('productionLine'),
+            'productionLines' => $productionLines,
+        ]);
+    }
+
+    public function update(UpdateMachineRequest $request, Machine $machine)
     {
         DB::beginTransaction();
 
@@ -150,23 +190,18 @@ class MachineController extends Controller
 
             DB::commit();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Machine updated successfully',
-                'data' => $machine->fresh(['productionLine']),
-            ]);
+            return redirect()->route('machines.index')
+                ->with('success', 'Machine updated successfully');
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to update machine',
-                'error' => $e->getMessage(),
-            ], 500);
+            return back()->withErrors([
+                'error' => 'Failed to update machine: ' . $e->getMessage()
+            ])->withInput();
         }
     }
 
-    public function destroy(Machine $machine): JsonResponse
+    public function destroy(Machine $machine)
     {
         try {
             // Check if machine has active production
@@ -175,10 +210,9 @@ class MachineController extends Controller
                 ->exists();
 
             if ($activeProduction) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Cannot delete machine with recent production activity',
-                ], 400);
+                return back()->withErrors([
+                    'error' => 'Cannot delete machine with recent production activity'
+                ]);
             }
 
             // Soft delete by setting is_active to false
@@ -187,20 +221,16 @@ class MachineController extends Controller
             // Update production line status
             $machine->productionLine->updateStatus();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Machine deactivated successfully',
-            ]);
+            return redirect()->route('machines.index')
+                ->with('success', 'Machine deactivated successfully');
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to delete machine',
-                'error' => $e->getMessage(),
-            ], 500);
+            return back()->withErrors([
+                'error' => 'Failed to delete machine: ' . $e->getMessage()
+            ]);
         }
     }
 
-    public function updateStatus(Request $request, Machine $machine): JsonResponse
+    public function updateStatus(Request $request, Machine $machine)
     {
         $validated = $request->validate([
             'status' => 'required|in:running,idle,maintenance,breakdown',
@@ -248,78 +278,13 @@ class MachineController extends Controller
             // Broadcast status change
             broadcast(new MachineStatusUpdated($machine, $previousStatus));
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Machine status updated successfully',
-                'data' => $machine->fresh(['currentStatusLog']),
-            ]);
+            return back()->with('success', 'Machine status updated successfully');
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to update machine status',
-                'error' => $e->getMessage(),
-            ], 500);
+            return back()->withErrors([
+                'error' => 'Failed to update machine status: ' . $e->getMessage()
+            ]);
         }
-    }
-
-    public function oee(Machine $machine, Request $request): JsonResponse
-    {
-        $validated = $request->validate([
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
-        ]);
-
-        $startDate = isset($validated['start_date'])
-            ? Carbon::parse($validated['start_date'])
-            : Carbon::now()->startOfDay();
-
-        $endDate = isset($validated['end_date'])
-            ? Carbon::parse($validated['end_date'])
-            : Carbon::now();
-
-        $oeeData = $this->oeeService->calculateMachineOEE($machine, $startDate, $endDate);
-
-        return response()->json([
-            'success' => true,
-            'data' => $oeeData,
-            'period' => [
-                'start' => $startDate->toIso8601String(),
-                'end' => $endDate->toIso8601String(),
-            ],
-        ]);
-    }
-
-    public function reliability(Machine $machine, Request $request): JsonResponse
-    {
-        $validated = $request->validate([
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
-        ]);
-
-        $startDate = isset($validated['start_date'])
-            ? Carbon::parse($validated['start_date'])
-            : Carbon::now()->startOfMonth();
-
-        $endDate = isset($validated['end_date'])
-            ? Carbon::parse($validated['end_date'])
-            : Carbon::now();
-
-        $mtbf = $this->downtimeService->getMTBF($machine, $startDate, $endDate);
-        $mttr = $this->downtimeService->getMTTR($machine, $startDate, $endDate);
-
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'mtbf' => $mtbf,
-                'mttr' => $mttr,
-                'availability' => $mtbf > 0 ? round(($mtbf / ($mtbf + $mttr)) * 100, 2) : 0,
-            ],
-            'period' => [
-                'start' => $startDate->toIso8601String(),
-                'end' => $endDate->toIso8601String(),
-            ],
-        ]);
     }
 }

@@ -15,34 +15,6 @@ use App\Http\Controllers\Api\{
 // Dashboard
 Route::get('/dashboard-api', [DashboardController::class, 'index']);
 
-// routes/api.php (add these routes)
-Route::middleware('auth:sanctum')->group(function () {
-    // Production Lines CRUD
-    Route::prefix('production-lines')->group(function () {
-        Route::get('/', [ProductionLineController::class, 'index']);
-        Route::post('/', [ProductionLineController::class, 'store']);
-        Route::get('/{line}', [ProductionLineController::class, 'show']);
-        Route::put('/{line}', [ProductionLineController::class, 'update']);
-        Route::delete('/{line}', [ProductionLineController::class, 'destroy']);
-        Route::get('/{line}/status', [ProductionLineController::class, 'status']);
-        Route::get('/{line}/oee', [ProductionLineController::class, 'oee']);
-    });
-
-    // Machines CRUD
-    Route::prefix('machines')->group(function () {
-        Route::get('/', [MachineController::class, 'index']);
-        Route::post('/', [MachineController::class, 'store']);
-        Route::post('/batch', [MachineController::class, 'batchCreate']);
-        Route::get('/{machine}', [MachineController::class, 'show']);
-        Route::put('/{machine}', [MachineController::class, 'update']);
-        Route::delete('/{machine}', [MachineController::class, 'destroy']);
-        Route::put('/{machine}/status', [MachineController::class, 'updateStatus']);
-        Route::get('/{machine}/oee', [MachineController::class, 'oee']);
-        Route::get('/{machine}/reliability', [MachineController::class, 'reliability']);
-    });
-});
-
-
 // Downtimes
 Route::prefix('downtimes')->group(function () {
     Route::get('/', [DowntimeController::class, 'index']);

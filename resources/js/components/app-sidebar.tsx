@@ -19,7 +19,7 @@ import { cn } from '@/lib/utils';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@radix-ui/react-collapsible';
-import { BookOpen, ChevronRight, Factory, Folder, Gauge, LayoutGrid, Wrench } from 'lucide-react';
+import { BookOpen, ChevronRight, Factory, Folder, LayoutGrid, Wrench } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -32,11 +32,6 @@ const mainNavItems: NavItem[] = [
         title: 'Production',
         icon: Factory,
         children: [
-            {
-                title: 'Overview',
-                href: '/production',
-                icon: Gauge,
-            },
             {
                 title: 'Production Lines',
                 href: '/production-lines',

@@ -6,10 +6,10 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
+import { useTypedForm } from '@/hooks/use-typed';
 import { cn } from '@/lib/utils';
 import { AlertCircle, Check } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
-import { productionApi } from '../../services/productionApi';
 import { CreateProductionLineData, ProductionLine } from '../../types/production';
 
 interface ProductionLineDialogProps {
@@ -21,37 +21,48 @@ interface ProductionLineDialogProps {
 
 const ProductionLineDialog: React.FC<ProductionLineDialogProps> = ({ open, onClose, onSave, line }) => {
     const [activeStep, setActiveStep] = useState(0);
-    const [loading, setLoading] = useState(false);
+
     const [error, setError] = useState<string | null>(null);
-    const [formData, setFormData] = useState<CreateProductionLineData>({
+
+    const { data, setData, post, processing } = useTypedForm<CreateProductionLineData>({
         name: '',
         code: '',
         description: '',
+        machine_template: undefined,
+        machine_count: undefined,
+        machines: [],
     });
+
     const [useTemplate, setUseTemplate] = useState(false);
     const [selectedTemplate, setSelectedTemplate] = useState<string>('');
     const [machineCount, setMachineCount] = useState(5);
 
     useEffect(() => {
         if (line) {
-            setFormData({
+            setData({
                 name: line.name,
                 code: line.code,
                 description: line.description || '',
+                machine_template: undefined,
+                machine_count: line.machines_count ? line.machines_count : undefined,
+                machines: [],
             });
             setActiveStep(0);
             setUseTemplate(false);
         } else {
-            setFormData({
+            setData({
                 name: '',
                 code: '',
                 description: '',
+                machine_template: undefined,
+                machine_count: undefined,
+                machines: [],
             });
         }
     }, [line]);
 
     const handleInputChange = (field: keyof CreateProductionLineData, value: any) => {
-        setFormData((prev) => ({ ...prev, [field]: value }));
+        setData((prev) => ({ ...prev, [field]: value }));
     };
 
     const handleNext = () => {
@@ -62,37 +73,40 @@ const ProductionLineDialog: React.FC<ProductionLineDialogProps> = ({ open, onClo
         setActiveStep((prev) => prev - 1);
     };
 
+    function submit(e: any) {
+        e.preventDefault();
+        console.log(data);
+        post('/production-lines/store');
+    }
+
     const handleSubmit = async () => {
-        try {
-            setLoading(true);
-            setError(null);
-
-            let data = { ...formData };
-
-            if (!line && useTemplate && selectedTemplate) {
-                data.machine_template = selectedTemplate as any;
-                data.machine_count = machineCount;
-            }
-
-            const response = line
-                ? await productionApi.updateProductionLine(line.id, data)
-                : useTemplate
-                  ? await productionApi.createProductionLineWithMachines(data)
-                  : await productionApi.createProductionLine(data);
-
-            if (response.success) {
-                onSave();
-                handleClose();
-            }
-        } catch (err: any) {
-            setError(err.response?.data?.message || 'Failed to save production line');
-        } finally {
-            setLoading(false);
-        }
+        console.log(data);
+        // try {
+        //     setLoading(true);
+        //     setError(null);
+        //     let data = { ...data };
+        //     if (!line && useTemplate && selectedTemplate) {
+        //         data.machine_template = selectedTemplate as any;
+        //         data.machine_count = machineCount;
+        //     }
+        //     const response = line
+        //         ? await productionApi.updateProductionLine(line.id, data)
+        //         : useTemplate
+        //           ? await productionApi.createProductionLineWithMachines(data)
+        //           : await productionApi.createProductionLine(data);
+        //     if (response.success) {
+        //         onSave();
+        //         handleClose();
+        //     }
+        // } catch (err: any) {
+        //     setError(err.response?.data?.message || 'Failed to save production line');
+        // } finally {
+        //     setLoading(false);
+        // }
     };
 
     const handleClose = () => {
-        setFormData({
+        setData({
             name: '',
             code: '',
             description: '',
@@ -108,7 +122,7 @@ const ProductionLineDialog: React.FC<ProductionLineDialogProps> = ({ open, onClo
     const isStepValid = () => {
         switch (activeStep) {
             case 0:
-                return formData.name && formData.code;
+                return data.name && data.code;
             case 1:
                 return !useTemplate || (selectedTemplate && machineCount > 0);
             default:
@@ -185,7 +199,7 @@ const ProductionLineDialog: React.FC<ProductionLineDialogProps> = ({ open, onClo
                                 </Label>
                                 <Input
                                     id="name"
-                                    value={formData.name}
+                                    value={data.name}
                                     onChange={(e) => handleInputChange('name', e.target.value)}
                                     placeholder="e.g., Main Assembly Line"
                                 />
@@ -198,7 +212,7 @@ const ProductionLineDialog: React.FC<ProductionLineDialogProps> = ({ open, onClo
                                 </Label>
                                 <Input
                                     id="code"
-                                    value={formData.code}
+                                    value={data.code}
                                     onChange={(e) => handleInputChange('code', e.target.value.toUpperCase())}
                                     placeholder="e.g., AL-A, PL-1"
                                 />
@@ -209,7 +223,7 @@ const ProductionLineDialog: React.FC<ProductionLineDialogProps> = ({ open, onClo
                                 <Label htmlFor="description">Description</Label>
                                 <Textarea
                                     id="description"
-                                    value={formData.description}
+                                    value={data.description}
                                     onChange={(e) => handleInputChange('description', e.target.value)}
                                     placeholder="Optional description..."
                                     className="min-h-[100px]"
@@ -300,8 +314,8 @@ const ProductionLineDialog: React.FC<ProductionLineDialogProps> = ({ open, onClo
                             Next
                         </Button>
                     ) : (
-                        <Button type="button" onClick={handleSubmit} disabled={loading || !isStepValid()}>
-                            {loading ? 'Saving...' : line ? 'Update' : 'Create'}
+                        <Button type="button" onClick={handleSubmit} disabled={processing || !isStepValid()}>
+                            {processing ? 'Saving...' : line ? 'Update' : 'Create'}
                         </Button>
                     )}
                 </DialogFooter>

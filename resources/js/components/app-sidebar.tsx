@@ -70,7 +70,6 @@ export function AppSidebar() {
                         <SidebarMenuButton size="lg" asChild>
                             <Link href="/dashboard">
                                 <AppLogo />
-                                <span className="ml-2 font-semibold">Production Pro</span>
                             </Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>

@@ -4,7 +4,7 @@ import { Label, PolarAngleAxis, PolarRadiusAxis, RadialBar, RadialBarChart } fro
 import { AdvancedParetoChart } from '../components/dashboard/advancedParetoChart';
 import { TotalProductionGraph } from '../components/dashboard/productionTotal';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartConfig, ChartContainer } from '@/components/ui/chart';
 import { breadcrumbs } from '@/config/breadcrumbs';
 import AppLayout from '@/layouts/app-layout';
@@ -48,7 +48,8 @@ export default function Dashboard() {
                     <div className="relative overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
                         <Card className="">
                             <CardHeader>
-                                <CardTitle>OEE</CardTitle>
+                                <CardTitle>Overall Equipment Effectiveness</CardTitle>
+                                <CardDescription>Equipment Effectiveness Metric</CardDescription>
                             </CardHeader>
                             <CardContent className="relative grid auto-rows-min gap-4 md:grid-cols-4">
                                 <HalfRadialChart label="Overall" chartData={chartData} value={oee} className="" />
@@ -58,121 +59,21 @@ export default function Dashboard() {
                             </CardContent>
                         </Card>
                     </div>
-                    {/* <div className="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
-                        <Card className="flex flex-col">
-                            <CardContent className="flex flex-1 items-center pb-0">
-                                <HalfRadialChart label="Availability" chartData={chartData} value={oee} />
-                            </CardContent>
-                        </Card>
-                    </div>
-                    <div className="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
-                        <Card className="flex flex-col">
-                            <CardContent className="flex flex-1 items-center pb-0">
-                                <HalfRadialChart label="Performance" chartData={chartData} value={oee} />
-                            </CardContent>
-                        </Card>
-                    </div>
-                    <div className="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
-                        <Card className="flex flex-col">
-                            <CardContent className="flex flex-1 items-center pb-0">
-                                <HalfRadialChart label="Quality" chartData={chartData} value={oee} />
-                            </CardContent>
-                        </Card>
-                    </div> */}
                 </div>
                 <TotalProductionGraph />
                 <div className="grid gap-4 overflow-hidden rounded-xl md:grid-cols-2 dark:border-sidebar-border">
-                    <Card>
-                        <MachineStatus />
-                        <QualityTrend />
-                        <TopIssues />
-                    </Card>
-                    {/* <Card>
-                        <CardHeader>
-                            <CardTitle>Production Total</CardTitle>
-                       
-                        </CardHeader>
-                        <CardContent>
-                            <ChartContainer className="h-[250px] w-full" config={prodTrendChartConfig}>
-                                <LineChart
-                                    accessibilityLayer
-                                    data={prodTrendChartData}
-                                    margin={{
-                                        top: 10,
-                                        right: 20,
-                                        left: 20,
-                                        bottom: 5,
-                                    }}
-                                >
-                                    <CartesianGrid vertical={false} />
-                                    <XAxis
-                                        dataKey="period"
-                                        tickLine={false}
-                                        axisLine={false}
-                                        tickMargin={8}
-                                        tickFormatter={(value) => {
-                                            const date = new Date(value);
-                                            return date.toLocaleDateString('en-US', {
-                                                month: 'short',
-                                                day: 'numeric',
-                                            });
-                                        }}
-                                    />
-                                    <CartesianGrid strokeDasharray="3 3" />
-                                    <ChartTooltip
-                                        cursor={false}
-                                        content={
-                                            <ChartTooltipContent
-                                                hideIndicator
-                                                labelFormatter={(value) => {
-                                                    const date = new Date(value);
+                    <div className="space-y-4">
+                        <Card>
+                            <MachineStatus />
+                        </Card>
+                        <Card>
+                            <QualityTrend />
+                        </Card>
 
-                                                    const dateString = date.toLocaleDateString('ms-MY', {
-                                                        month: 'short',
-                                                        day: 'numeric',
-                                                    });
-
-                                                    const shift = getShift[date.getHours()];
-
-                                                    return dateString + ' ' + shift;
-                                                }}
-                                            />
-                                        }
-                                    />
-                                    <Line
-                                        dataKey="total_produced"
-                                        type="natural"
-                                        stroke="var(--color-total_produced)"
-                                        strokeWidth={2}
-                                        dot={{
-                                            fill: 'var(--total_produced)',
-                                        }}
-                                        activeDot={{
-                                            r: 6,
-                                        }}
-                                    />
-                                    <Line
-                                        dataKey="total_rejected"
-                                        type="natural"
-                                        stroke="var(--color-total_rejected)"
-                                        strokeWidth={2}
-                                        dot={{
-                                            fill: 'var(--total_rejected)',
-                                        }}
-                                        activeDot={{
-                                            r: 6,
-                                        }}
-                                    />
-                                </LineChart>
-                            </ChartContainer>
-                        </CardContent>
-                        <CardFooter className="flex-col items-start gap-2 text-sm">
-                            <div className="flex gap-2 leading-none font-medium">
-                                Trending up by 5.2% this month <TrendingUp className="h-4 w-4" />
-                            </div>
-                            <div className="leading-none text-muted-foreground">Showing total visitors for the last 6 months</div>
-                        </CardFooter>
-                    </Card> */}
+                        <Card>
+                            <TopIssues />
+                        </Card>
+                    </div>
                     <AdvancedParetoChart />
                 </div>
             </div>

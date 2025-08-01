@@ -1,9 +1,7 @@
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { TrendingDown, TrendingUp } from 'lucide-react';
-import { useState } from 'react';
 import { Area, Bar, CartesianGrid, ComposedChart, Legend, Line, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from '../ui/chart';
 
@@ -122,8 +120,8 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 export function TotalProductionGraph() {
-    const [timeRange, setTimeRange] = useState('year');
-    const [chartType, setChartType] = useState('combined');
+    // const [timeRange, setTimeRange] = useState('year');
+    // const [chartType, setChartType] = useState('combined');
 
     // Calculate totals
     const totalPlanned = productionData.reduce((sum, item) => sum + item.planned, 0);
@@ -143,7 +141,8 @@ export function TotalProductionGraph() {
                         <CardTitle>Total Production Overview</CardTitle>
                         <CardDescription>Production performance metrics and trends</CardDescription>
                     </div>
-                    <div className="flex gap-2">
+                    {/* NOTE feature idea : chart type and year selection */}
+                    {/* <div className="flex gap-2">
                         <Select value={chartType} onValueChange={setChartType}>
                             <SelectTrigger className="w-[140px]">
                                 <SelectValue />
@@ -164,7 +163,7 @@ export function TotalProductionGraph() {
                                 <SelectItem value="month">Month</SelectItem>
                             </SelectContent>
                         </Select>
-                    </div>
+                    </div> */}
                 </div>
             </CardHeader>
             <CardContent>

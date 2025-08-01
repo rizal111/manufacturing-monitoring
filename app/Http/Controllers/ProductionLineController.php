@@ -54,11 +54,6 @@ class ProductionLineController extends Controller
         ]);
     }
 
-    public function create()
-    {
-        return Inertia::render('ProductionLines/Create');
-    }
-
     public function store(StoreProductionLineRequest $request)
     {
         DB::beginTransaction();

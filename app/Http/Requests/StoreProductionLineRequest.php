@@ -19,6 +19,9 @@ class StoreProductionLineRequest extends FormRequest
             'description' => 'nullable|string|max:1000',
             'status' => 'nullable|in:running,idle,maintenance,stopped',
             'is_active' => 'nullable|boolean',
+            'machine_template' => 'nullable|string|in:assembly,packaging,quality',
+            'machine_count' => 'nullable|integer|min:1',
+            'machines' => 'nullable|array',
         ];
     }
 

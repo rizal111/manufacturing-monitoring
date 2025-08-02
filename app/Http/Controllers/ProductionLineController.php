@@ -152,11 +152,10 @@ class ProductionLineController extends Controller
                 ]);
             }
 
-            // Soft delete by setting is_active to false
-            $productionLine->update(['is_active' => false]);
+            $productionLine->delete();
 
             return redirect()->route('production-lines.index')
-                ->with('success', 'Production line deactivated successfully');
+                ->with('success', 'Production line deleted successfully');
         } catch (\Exception $e) {
             return back()->withErrors([
                 'error' => 'Failed to delete production line: ' . $e->getMessage()

@@ -21,7 +21,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     //     return Inertia::render('production-lines');
     // })->name('dashboard');
     // Production Lines
-    Route::resource('production-lines', ProductionLineController::class);
+    Route::resource('production-lines', ProductionLineController::class)->names('production-lines');;
 
     // Machines
     Route::resource('machines', MachineController::class);

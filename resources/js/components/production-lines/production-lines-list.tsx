@@ -170,6 +170,7 @@ const ProductionLinesList: React.FC<ProductionLinesListProps> = ({ productionLin
                                     </Tooltip>
                                 </TooltipProvider>
                                 <div inert={false}>
+                                    // FIXME - When Dropmenu is used, opening alert dialog make ui not working. error : aria focus
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
                                             <Button variant="ghost" size="icon" className="h-8 w-8">

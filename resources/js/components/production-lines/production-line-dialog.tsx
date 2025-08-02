@@ -73,36 +73,17 @@ const ProductionLineDialog: React.FC<ProductionLineDialogProps> = ({ open, onClo
         setActiveStep((prev) => prev - 1);
     };
 
-    function submit(e: any) {
-        e.preventDefault();
-        console.log(data);
-        post('/production-lines/store');
-    }
-
     const handleSubmit = async () => {
-        console.log(data);
-        // try {
-        //     setLoading(true);
-        //     setError(null);
-        //     let data = { ...data };
-        //     if (!line && useTemplate && selectedTemplate) {
-        //         data.machine_template = selectedTemplate as any;
-        //         data.machine_count = machineCount;
-        //     }
-        //     const response = line
-        //         ? await productionApi.updateProductionLine(line.id, data)
-        //         : useTemplate
-        //           ? await productionApi.createProductionLineWithMachines(data)
-        //           : await productionApi.createProductionLine(data);
-        //     if (response.success) {
-        //         onSave();
-        //         handleClose();
-        //     }
-        // } catch (err: any) {
-        //     setError(err.response?.data?.message || 'Failed to save production line');
-        // } finally {
-        //     setLoading(false);
-        // }
+        const routeUrl = line ? 'production-lines.update' : 'production-lines.store';
+
+        post(route(routeUrl), {
+            onSuccess: () => {
+                handleClose();
+            },
+            onError: (error) => {
+                setError(error.error || 'Failed to save production line');
+            },
+        });
     };
 
     const handleClose = () => {

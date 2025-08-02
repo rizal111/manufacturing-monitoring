@@ -15,7 +15,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { usePage } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 import { AlertCircle, Copy, Edit, Eye, MoreVertical, Plus, Search, Trash2 } from 'lucide-react';
 import React, { useState } from 'react';
 import { ProductionLine } from '../../types/production';
@@ -61,38 +61,35 @@ const ProductionLinesList: React.FC<ProductionLinesListProps> = ({ productionLin
         // );
     };
 
-    const handleCreate = () => {
-        // router.visit('/production-lines/create');
-    };
-
     const handleEdit = (line: ProductionLine) => {
         // router.visit(`/production-lines/${line.id}/edit`);
     };
 
     const handleDelete = () => {
-        // if (!deletingLine) return;
-        // router.delete(`/production-lines/${deletingLine.id}`, {
-        //     onSuccess: () => {
-        //         setDeleteDialogOpen(false);
-        //         setDeletingLine(null);
-        //     },
-        //     onError: () => {
-        //         // Error will be handled by flash messages
-        //     },
-        // });
+        if (!deletingLine) return;
+
+        router.delete(`/production-lines/${deletingLine.id}`, {
+            onSuccess: () => {
+                setDeleteDialogOpen(false);
+                setDeletingLine(null);
+            },
+            onError: () => {
+                // Error will be handled by flash messages
+            },
+        });
     };
 
     const handleView = (line: ProductionLine) => {
-        // router.visit(`/production-lines/${line.id}`);
+        router.visit(`/production-lines/${line.id}`);
     };
 
     const handleDuplicate = (line: ProductionLine) => {
         // Create a new production line with copied data
-        // router.post('/production-lines', {
-        //     name: `${line.name} (Copy)`,
-        //     code: `${line.code}-COPY`,
-        //     description: line.description,
-        // });
+        router.post('/production-lines', {
+            name: `${line.name} (Copy)`,
+            code: `${line.code}-COPY`,
+            description: line.description,
+        });
     };
 
     const getStatusVariant = (status: string): 'default' | 'secondary' | 'destructive' | 'outline' => {
@@ -172,33 +169,35 @@ const ProductionLinesList: React.FC<ProductionLinesListProps> = ({ productionLin
                                         <TooltipContent>View</TooltipContent>
                                     </Tooltip>
                                 </TooltipProvider>
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                                            <MoreVertical className="h-4 w-4" />
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                        <DropdownMenuItem onClick={() => handleEdit(line)}>
-                                            <Edit className="mr-2 h-4 w-4" />
-                                            Edit
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => handleDuplicate(line)}>
-                                            <Copy className="mr-2 h-4 w-4" />
-                                            Duplicate
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem
-                                            onClick={() => {
-                                                setDeletingLine(line);
-                                                setDeleteDialogOpen(true);
-                                            }}
-                                            className="text-destructive focus:text-destructive"
-                                        >
-                                            <Trash2 className="mr-2 h-4 w-4" />
-                                            Delete
-                                        </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
+                                <div inert={false}>
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                <MoreVertical className="h-4 w-4" />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                            <DropdownMenuItem onClick={() => handleEdit(line)}>
+                                                <Edit className="mr-2 h-4 w-4" />
+                                                Edit
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => handleDuplicate(line)}>
+                                                <Copy className="mr-2 h-4 w-4" />
+                                                Duplicate
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem
+                                                onClick={() => {
+                                                    setDeletingLine(line);
+                                                    setDeleteDialogOpen(true);
+                                                }}
+                                                className="text-destructive focus:text-destructive"
+                                            >
+                                                <Trash2 className="mr-2 h-4 w-4" />
+                                                Delete
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </div>
                             </div>
                         </div>
                         <CardDescription>{line.description || '-'}</CardDescription>

@@ -210,9 +210,9 @@ const ProductionLinesList: React.FC<ProductionLinesListProps> = ({ productionLin
             )}
             {/* Filter Section */}
             <div className="space-y-4">
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="flex gap-2 sm:flex-row lg:grid-cols-4">
                     {/* Search Input */}
-                    <div className="relative">
+                    <div className="relative grow">
                         <Search className="absolute top-2.5 left-2 h-4 w-4 text-muted-foreground" />
                         <Input
                             placeholder="Search production lines..."
@@ -223,38 +223,40 @@ const ProductionLinesList: React.FC<ProductionLinesListProps> = ({ productionLin
                     </div>
 
                     {/* Status Filter */}
-                    <Select value={statusFilter} onValueChange={handleStatusChange}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="All Statuses" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">All Statuses</SelectItem>
-                            <SelectItem value="running">Running</SelectItem>
-                            <SelectItem value="idle">Idle</SelectItem>
-                            <SelectItem value="maintenance">Maintenance</SelectItem>
-                            <SelectItem value="stopped">Stopped</SelectItem>
-                        </SelectContent>
-                    </Select>
+                    <div className="w-[127px]">
+                        <Select value={statusFilter} onValueChange={handleStatusChange}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="All Statuses" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Statuses</SelectItem>
+                                <SelectItem value="running">Running</SelectItem>
+                                <SelectItem value="idle">Idle</SelectItem>
+                                <SelectItem value="maintenance">Maintenance</SelectItem>
+                                <SelectItem value="stopped">Stopped</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
 
                     {/* Active Filter */}
-                    <Select value={activeFilter} onValueChange={handleActiveChange}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="All Lines" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">All Lines</SelectItem>
-                            <SelectItem value="true">Active Only</SelectItem>
-                            <SelectItem value="false">Inactive Only</SelectItem>
-                        </SelectContent>
-                    </Select>
+                    <div className="w-[126px]">
+                        <Select value={activeFilter} onValueChange={handleActiveChange}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="All Lines" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Lines</SelectItem>
+                                <SelectItem value="true">Active Only</SelectItem>
+                                <SelectItem value="false">Inactive Only</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
 
                     {/* Clear Filters Button */}
-                    {hasActiveFilters && (
-                        <Button variant="outline" onClick={clearFilters} className="flex items-center">
-                            <X className="mr-2 h-4 w-4" />
-                            Clear Filters
-                        </Button>
-                    )}
+                    <Button variant="outline" disabled={!hasActiveFilters} onClick={clearFilters} className="flex items-center">
+                        <X className="mr-2 h-4 w-4" />
+                        Clear Filters
+                    </Button>
                 </div>
 
                 {/* Active filters display */}

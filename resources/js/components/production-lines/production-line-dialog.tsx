@@ -140,9 +140,9 @@ const ProductionLineDialog: React.FC<ProductionLineDialogProps> = ({ open, onClo
                     {!line && (
                         <>
                             {/* Custom Stepper */}
-                            <div className="flex items-center justify-between">
+                            <div className="mx-4 flex items-center justify-between">
                                 {steps.map((step, index) => (
-                                    <div key={step} className="flex items-center">
+                                    <div key={step} className={cn('flex items-center', index + 1 < steps.length ? 'w-full' : 'flex-1')}>
                                         <div className="flex flex-col items-center">
                                             <div
                                                 className={cn(
@@ -157,13 +157,13 @@ const ProductionLineDialog: React.FC<ProductionLineDialogProps> = ({ open, onClo
                                                 {index < activeStep ? (
                                                     <Check className="h-4 w-4" />
                                                 ) : (
-                                                    <span className="text-sm font-medium">{index + 1}</span>
+                                                    <span className={cn('text-sm font-medium', index === 0 && 'pr-[2px]')}>{index + 1}</span>
                                                 )}
                                             </div>
-                                            <span className="mt-1 text-sm">{step}</span>
+                                            <span className="mt-1 text-sm text-nowrap">{step}</span>
                                         </div>
                                         {index < steps.length - 1 && (
-                                            <div className={cn('mx-4 h-0.5 w-24', index < activeStep ? 'bg-primary' : 'bg-muted-foreground')} />
+                                            <div className={cn('mx-4 h-0.5 w-full', index < activeStep ? 'bg-primary' : 'bg-muted-foreground')} />
                                         )}
                                     </div>
                                 ))}

@@ -319,7 +319,6 @@ const ProductionLinesList: React.FC<ProductionLinesListProps> = ({ productionLin
                             </div>
 
                             <div className="flex justify-end gap-1">
-                                {/*  FIXME - When Dropmenu is used, opening alert dialog make ui not working. error : aria focus */}
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                         <Button variant="ghost" size="icon" className="h-8 w-8">

@@ -8,9 +8,10 @@ import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import { useTypedForm } from '@/hooks/use-typed';
 import { cn } from '@/lib/utils';
-import { AlertCircle, Check } from 'lucide-react';
+import { AlertCircle, Check, Plus, Trash2 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
-import { CreateProductionLineData, ProductionLine } from '../../types/production';
+import { CreateMachineData, CreateProductionLineData, ProductionLine } from '../../types/production';
+import { Card, CardContent } from '../ui/card';
 
 interface ProductionLineDialogProps {
     open: boolean;
@@ -24,18 +25,14 @@ const ProductionLineDialog: React.FC<ProductionLineDialogProps> = ({ open, onClo
 
     const [error, setError] = useState<string | null>(null);
 
-    const { data, setData, post, processing } = useTypedForm<CreateProductionLineData>({
+    const { data, setData, post, patch, processing } = useTypedForm<CreateProductionLineData>({
         name: '',
         code: '',
         description: '',
-        machine_template: undefined,
-        machine_count: undefined,
         machines: [],
     });
 
-    const [useTemplate, setUseTemplate] = useState(false);
-    const [selectedTemplate, setSelectedTemplate] = useState<string>('');
-    const [machineCount, setMachineCount] = useState(5);
+    const [isAddMachinesNow, setIsAddMachinesNow] = useState(false);
 
     useEffect(() => {
         if (line) {
@@ -43,19 +40,14 @@ const ProductionLineDialog: React.FC<ProductionLineDialogProps> = ({ open, onClo
                 name: line.name,
                 code: line.code,
                 description: line.description || '',
-                machine_template: undefined,
-                machine_count: line.machines_count ? line.machines_count : undefined,
                 machines: [],
             });
             setActiveStep(0);
-            setUseTemplate(false);
         } else {
             setData({
                 name: '',
                 code: '',
                 description: '',
-                machine_template: undefined,
-                machine_count: undefined,
                 machines: [],
             });
         }
@@ -65,6 +57,33 @@ const ProductionLineDialog: React.FC<ProductionLineDialogProps> = ({ open, onClo
         setData((prev) => ({ ...prev, [field]: value }));
     };
 
+    const handleAddMachine = () => {
+        const newMachine: CreateMachineData = {
+            name: '',
+            code: '',
+            description: '',
+            ideal_cycle_time: 0,
+        };
+
+        setData((prev) => ({
+            ...prev,
+            machines: [...(prev.machines || []), newMachine],
+        }));
+    };
+
+    const handleRemoveMachine = (index: number) => {
+        setData((prev) => ({
+            ...prev,
+            machines: prev.machines?.filter((_, i) => i !== index) || [],
+        }));
+    };
+
+    const handleMachineChange = (index: number, field: keyof CreateMachineData, value: any) => {
+        setData((prev) => ({
+            ...prev,
+            machines: prev.machines?.map((machine, i) => (i === index ? { ...machine, [field]: value } : machine)) || [],
+        }));
+    };
     const handleNext = () => {
         setActiveStep((prev) => prev + 1);
     };
@@ -74,16 +93,23 @@ const ProductionLineDialog: React.FC<ProductionLineDialogProps> = ({ open, onClo
     };
 
     const handleSubmit = async () => {
-        const routeUrl = line ? 'production-lines.update' : 'production-lines.store';
-
-        post(route(routeUrl), {
-            onSuccess: () => {
-                handleClose();
-            },
-            onError: (error) => {
-                setError(error.error || 'Failed to save production line');
-            },
-        });
+        line
+            ? patch(route('production-lines.update', line.id), {
+                  onSuccess: () => {
+                      handleClose();
+                  },
+                  onError: (error) => {
+                      setError(error.error || 'Failed to save production line');
+                  },
+              })
+            : post(route('production-lines.store'), {
+                  onSuccess: () => {
+                      handleClose();
+                  },
+                  onError: (error) => {
+                      setError(error.error || 'Failed to save production line');
+                  },
+              });
     };
 
     const handleClose = () => {
@@ -93,9 +119,6 @@ const ProductionLineDialog: React.FC<ProductionLineDialogProps> = ({ open, onClo
             description: '',
         });
         setActiveStep(0);
-        setUseTemplate(false);
-        setSelectedTemplate('');
-        setMachineCount(5);
         setError(null);
         onClose();
     };
@@ -104,20 +127,12 @@ const ProductionLineDialog: React.FC<ProductionLineDialogProps> = ({ open, onClo
         switch (activeStep) {
             case 0:
                 return data.name && data.code;
-            case 1:
-                return !useTemplate || (selectedTemplate && machineCount > 0);
             default:
                 return true;
         }
     };
 
     const steps = line ? ['Basic Information'] : ['Basic Information', 'Machine Setup'];
-
-    const templates = [
-        { id: 'assembly', label: 'Assembly Line' },
-        { id: 'packaging', label: 'Packaging Line' },
-        { id: 'quality', label: 'Quality Control' },
-    ];
 
     return (
         <Dialog open={open} onOpenChange={handleClose}>
@@ -218,10 +233,7 @@ const ProductionLineDialog: React.FC<ProductionLineDialogProps> = ({ open, onClo
                         <div className="space-y-4">
                             <div className="space-y-3">
                                 <Label>Machine Setup</Label>
-                                <RadioGroup
-                                    value={useTemplate ? 'template' : 'manual'}
-                                    onValueChange={(value) => setUseTemplate(value === 'template')}
-                                >
+                                <RadioGroup defaultValue="add" onValueChange={(value) => setIsAddMachinesNow(value === 'add')}>
                                     <div className="flex items-center space-x-2">
                                         <RadioGroupItem value="manual" id="manual" />
                                         <Label htmlFor="manual" className="cursor-pointer font-normal">
@@ -229,15 +241,104 @@ const ProductionLineDialog: React.FC<ProductionLineDialogProps> = ({ open, onClo
                                         </Label>
                                     </div>
                                     <div className="flex items-center space-x-2">
-                                        <RadioGroupItem value="template" id="template" />
-                                        <Label htmlFor="template" className="cursor-pointer font-normal">
-                                            Use a template to create machines automatically
+                                        <RadioGroupItem value="add" id="add" />
+                                        <Label htmlFor="add" className="cursor-pointer font-normal">
+                                            add machines now
                                         </Label>
                                     </div>
                                 </RadioGroup>
                             </div>
+                            {/* Machines List */}
+                            {isAddMachinesNow && (
+                                <div className="space-y-4">
+                                    {data.machines && data.machines.length > 0 ? (
+                                        <div className="max-h-[388px] space-y-4 overflow-auto">
+                                            {data.machines.map((machine, index) => (
+                                                <Card key={index}>
+                                                    <CardContent>
+                                                        <div className="space-y-4">
+                                                            <div className="mb-4 flex items-center justify-between">
+                                                                <h4 className="text-sm font-medium">Machine {index + 1}</h4>
+                                                                <Button
+                                                                    type="button"
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    onClick={() => handleRemoveMachine(index)}
+                                                                    className="h-8 w-8 p-0"
+                                                                >
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                </Button>
+                                                            </div>
 
-                            {useTemplate && (
+                                                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                                                <div className="space-y-2">
+                                                                    <Label htmlFor={`machine_name_${index}`}>Machine Name</Label>
+                                                                    <Input
+                                                                        id={`machine_name_${index}`}
+                                                                        value={machine.name}
+                                                                        onChange={(e) => handleMachineChange(index, 'name', e.target.value)}
+                                                                        placeholder="e.g., CNC Machine 1"
+                                                                        required
+                                                                    />
+                                                                </div>
+
+                                                                <div className="space-y-2">
+                                                                    <Label htmlFor={`machine_code_${index}`}>Machine Code</Label>
+                                                                    <Input
+                                                                        id={`machine_code_${index}`}
+                                                                        value={machine.code}
+                                                                        onChange={(e) => handleMachineChange(index, 'code', e.target.value)}
+                                                                        placeholder="e.g., CNC-001"
+                                                                        required
+                                                                    />
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="space-y-2">
+                                                                <Label htmlFor={`machine_cycle_time_${index}`}>Ideal Cycle Time (seconds)</Label>
+                                                                <Input
+                                                                    id={`machine_cycle_time_${index}`}
+                                                                    type="number"
+                                                                    value={machine.ideal_cycle_time}
+                                                                    onChange={(e) =>
+                                                                        handleMachineChange(index, 'ideal_cycle_time', parseInt(e.target.value) || 0)
+                                                                    }
+                                                                    placeholder="e.g., 120"
+                                                                    min="0"
+                                                                    required
+                                                                />
+                                                            </div>
+
+                                                            <div className="space-y-2">
+                                                                <Label htmlFor={`machine_description_${index}`}>Description (Optional)</Label>
+                                                                <Textarea
+                                                                    id={`machine_description_${index}`}
+                                                                    value={machine.description}
+                                                                    onChange={(e) => handleMachineChange(index, 'description', e.target.value)}
+                                                                    placeholder="Enter machine description..."
+                                                                    rows={2}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    </CardContent>
+                                                </Card>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <Card className="border-dashed">
+                                            <CardContent className="flex flex-col items-center justify-center py-8">
+                                                <p className="text-sm text-muted-foreground">No machines added yet</p>
+                                            </CardContent>
+                                        </Card>
+                                    )}
+
+                                    <Button type="button" onClick={handleAddMachine} variant="outline" className="w-full">
+                                        <Plus className="mr-2 h-4 w-4" />
+                                        Add Machine
+                                    </Button>
+                                </div>
+                            )}
+                            {/* {useTemplate && (
                                 <div className="space-y-4">
                                     <div className="space-y-2">
                                         <Label>Select Template:</Label>
@@ -273,7 +374,7 @@ const ProductionLineDialog: React.FC<ProductionLineDialogProps> = ({ open, onClo
                                         </div>
                                     )}
                                 </div>
-                            )}
+                            )} */}
                         </div>
                     )}
                 </div>

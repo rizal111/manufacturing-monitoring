@@ -43,8 +43,6 @@ export interface CreateProductionLineData {
     name: string;
     code: string;
     description?: string;
-    machine_template?: 'assembly' | 'packaging' | 'quality';
-    machine_count?: number;
     machines?: CreateMachineData[];
 }
 

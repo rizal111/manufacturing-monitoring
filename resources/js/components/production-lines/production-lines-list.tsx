@@ -15,9 +15,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { router, usePage } from '@inertiajs/react';
-import { AlertCircle, Copy, Edit, Eye, Filter, MoreVertical, Plus, Search, Trash2, X } from 'lucide-react';
+import { AlertCircle, Copy, Edit, Filter, MoreVertical, Plus, Search, Trash2, X } from 'lucide-react';
 import React, { useCallback, useState } from 'react';
 import { ProductionLine } from '../../types/production';
 import ProductionLineDialog from './production-line-dialog';
@@ -37,6 +36,11 @@ interface ProductionLinesListProps {
     };
 }
 
+interface DropdownMenuAction {
+    action: 'edit' | 'delete' | 'view' | 'duplicate' | '';
+    data: Record<string, any>;
+}
+
 const ProductionLinesList: React.FC<ProductionLinesListProps> = ({ productionLines: propProductionLines, filters: propFilters }) => {
     const { props } = usePage<any>();
 
@@ -50,7 +54,9 @@ const ProductionLinesList: React.FC<ProductionLinesListProps> = ({ productionLin
     const [statusFilter, setStatusFilter] = useState(filters.status || 'all');
     const [activeFilter, setActiveFilter] = useState(filters.is_active || 'all');
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [productionLine, setProductionLine] = useState<ProductionLine | null>(null);
     const [deletingLine, setDeletingLine] = useState<ProductionLine | null>(null);
+    const [dropdownMenuAction, setDropdownMenuAction] = useState<DropdownMenuAction>({ action: '', data: {} });
 
     // Debounce timer reference
     const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
@@ -129,10 +135,6 @@ const ProductionLinesList: React.FC<ProductionLinesListProps> = ({ productionLin
 
     const hasActiveFilters = searchTerm !== '' || statusFilter !== 'all' || activeFilter !== 'all';
 
-    const handleEdit = (line: ProductionLine) => {
-        // router.visit(`/production-lines/${line.id}/edit`);
-    };
-
     const handleDelete = () => {
         if (!deletingLine) return;
 
@@ -147,10 +149,6 @@ const ProductionLinesList: React.FC<ProductionLinesListProps> = ({ productionLin
         });
     };
 
-    const handleView = (line: ProductionLine) => {
-        router.visit(`/production-lines/${line.id}`);
-    };
-
     const handleDuplicate = (line: ProductionLine) => {
         // Create a new production line with copied data
         router.post('/production-lines', {
@@ -158,6 +156,25 @@ const ProductionLinesList: React.FC<ProductionLinesListProps> = ({ productionLin
             code: `${line.code}-COPY`,
             description: line.description,
         });
+    };
+
+    const handleCloseComplete = () => {
+        if (dropdownMenuAction.action === '') return;
+
+        switch (dropdownMenuAction.action) {
+            case 'delete':
+                if (dropdownMenuAction.data) {
+                    setDeletingLine(dropdownMenuAction.data as ProductionLine);
+                    setDeleteDialogOpen(true);
+                }
+                break;
+            case 'edit':
+                if (dropdownMenuAction.data) {
+                    setProductionLine(dropdownMenuAction.data as ProductionLine);
+                    setProductionLineDialogOpen(true);
+                }
+        }
+        setDropdownMenuAction({ action: '', data: {} });
     };
 
     const getStatusVariant = (status: string): 'default' | 'secondary' | 'destructive' | 'outline' => {
@@ -302,59 +319,41 @@ const ProductionLinesList: React.FC<ProductionLinesListProps> = ({ productionLin
                             </div>
 
                             <div className="flex justify-end gap-1">
-                                <TooltipProvider>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <Button variant="ghost" size="icon" onClick={() => handleView(line)} className="h-8 w-8">
-                                                <Eye className="h-4 w-4" />
-                                            </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent>View</TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
-                                <div inert={false}>
-                                    {/*  FIXME - When Dropmenu is used, opening alert dialog make ui not working. error : aria focus */}
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                                                <MoreVertical className="h-4 w-4" />
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end">
-                                            <DropdownMenuItem onClick={() => handleEdit(line)}>
-                                                <Edit className="mr-2 h-4 w-4" />
-                                                Edit
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem onClick={() => handleDuplicate(line)}>
-                                                <Copy className="mr-2 h-4 w-4" />
-                                                Duplicate
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem
-                                                onClick={() => {
-                                                    setDeletingLine(line);
-                                                    setDeleteDialogOpen(true);
-                                                }}
-                                                className="text-destructive focus:text-destructive"
-                                            >
-                                                <Trash2 className="mr-2 h-4 w-4" />
-                                                Delete
-                                            </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                </div>
+                                {/*  FIXME - When Dropmenu is used, opening alert dialog make ui not working. error : aria focus */}
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                                            <MoreVertical className="h-4 w-4" />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" onCloseAutoFocus={handleCloseComplete}>
+                                        <DropdownMenuItem onClick={() => setDropdownMenuAction({ action: 'edit', data: line })}>
+                                            <Edit className="mr-2 h-4 w-4" />
+                                            Edit
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => handleDuplicate(line)}>
+                                            <Copy className="mr-2 h-4 w-4" />
+                                            Duplicate
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                            onClick={() => {
+                                                setDropdownMenuAction({ action: 'delete', data: line });
+                                            }}
+                                            className="text-destructive focus:text-destructive"
+                                        >
+                                            <Trash2 className="mr-2 h-4 w-4" />
+                                            Delete
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
                             </div>
                         </div>
                         <CardDescription>{line.description || '-'}</CardDescription>
                     </CardHeader>
                     <CardContent className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                         <div>
-                            {/* <div className="mt-2">
-                                <span className="font-semibold">Machines Count: </span>
-                                {line.machines_count || (line.machines ? line.machines.length : 0)}
-                            </div> */}
                             <div className="mt-2">
                                 <span className="font-semibold">
-                                    {' '}
                                     {line.machines_count || (line.machines ? line.machines.length + ' ' : '0 ')} Machines:{' '}
                                 </span>
                                 {line.machines ? (
@@ -387,17 +386,23 @@ const ProductionLinesList: React.FC<ProductionLinesListProps> = ({ productionLin
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel onClick={() => setDeletingLine(null)}>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                            Delete
-                        </AlertDialogAction>
+                        <Button onClick={handleDelete} variant="destructive" asChild>
+                            <AlertDialogAction asChild>
+                                <button>Delete</button>
+                            </AlertDialogAction>
+                        </Button>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
             <ProductionLineDialog
                 open={ProductionLineDialogOpen}
-                line={null}
-                onClose={() => setProductionLineDialogOpen(false)}
-                onSave={() => setProductionLineDialogOpen(false)}
+                line={productionLine}
+                onClose={() => {
+                    setProductionLineDialogOpen(false), setProductionLine(null);
+                }}
+                onSave={() => {
+                    setProductionLineDialogOpen(false), setProductionLine(null);
+                }}
             />
         </div>
     );

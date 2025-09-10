@@ -24,7 +24,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('production-lines', ProductionLineController::class)->names('production-lines');
 
     // Machines
-    Route::resource('machines', MachineController::class);
+    Route::resource('machines', MachineController::class)->names('machines');;
     Route::patch('/machines/{machine}/status', [MachineController::class, 'updateStatus'])
         ->name('machines.update-status');
 });

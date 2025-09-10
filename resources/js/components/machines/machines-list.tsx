@@ -1,7 +1,6 @@
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
     AlertDialog,
-    AlertDialogAction,
     AlertDialogCancel,
     AlertDialogContent,
     AlertDialogDescription,
@@ -13,14 +12,14 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { router, usePage } from '@inertiajs/react';
-import { AlertCircle, Edit, Eye, Pause, Play, Plus, Search, Trash2, Wrench } from 'lucide-react';
+import { AlertCircle, CheckCircle2Icon, Edit, Pause, Play, Plus, Search, Trash2, Wrench } from 'lucide-react';
 import React, { useState } from 'react';
 import { Machine, ProductionLine } from '../../types/production';
-// import MachineStatusDialog from './machine-status-dialog';
+import MachineDialog from './machine-dialog';
 
 interface MachinesListProps {
     machines?: {
@@ -47,18 +46,23 @@ const MachinesList: React.FC<MachinesListProps> = ({ machines: propMachines, pro
     const filters = propFilters || props.filters || {};
     const flash = props.flash || {};
 
+    const [deleteDialogError, setDeleteDialogError] = useState<string | null>(null);
+
     const [searchTerm, setSearchTerm] = useState(filters.search || '');
-    const [filterLineId, setFilterLineId] = useState(filters.line_id || '');
-    const [filterStatus, setFilterStatus] = useState(filters.status || '');
-    const [statusDialogOpen, setStatusDialogOpen] = useState(false);
+    const [filterLineId, setFilterLineId] = useState(filters.line_id || 'all');
+    const [filterStatus, setFilterStatus] = useState(filters.status || 'all');
+
+    const [MachineDialogOpen, setMachineDialogOpen] = useState(false);
     const [selectedMachine, setSelectedMachine] = useState<Machine | null>(null);
+
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [deletingMachine, setDeletingMachine] = useState<Machine | null>(null);
+    const [deleteDialogProcessing, setDeleteDialogProcessing] = useState(false);
 
     const handleFilter = (key: string, value: string) => {
         const newFilters: any = {
             ...filters,
-            [key]: value || undefined,
+            [key]: key !== 'search' && value == 'all' ? undefined : value || undefined,
         };
 
         // Update local state
@@ -74,50 +78,29 @@ const MachinesList: React.FC<MachinesListProps> = ({ machines: propMachines, pro
         });
     };
 
-    const handleCreate = () => {
-        router.visit('/machines/create');
-    };
-
     const handleEdit = (machine: Machine) => {
-        router.visit(`/machines/${machine.id}/edit`);
-    };
-
-    const handleStatusUpdate = (machine: Machine) => {
         setSelectedMachine(machine);
-        setStatusDialogOpen(true);
-    };
-
-    const handleStatusSave = (status: string, data?: any) => {
-        if (!selectedMachine) return;
-
-        router.patch(
-            `/machines/${selectedMachine.id}/status`,
-            {
-                status,
-                ...data,
-            },
-            {
-                onSuccess: () => {
-                    setStatusDialogOpen(false);
-                    setSelectedMachine(null);
-                },
-            },
-        );
+        setMachineDialogOpen(true);
     };
 
     const handleDelete = () => {
         if (!deletingMachine) return;
 
-        router.delete(`/machines/${deletingMachine.id}`, {
+        router.delete(route('machines.destroy', deletingMachine.id), {
+            onStart: () => {
+                setDeleteDialogProcessing(true);
+            },
+            onFinish: () => {
+                setDeleteDialogProcessing(false);
+            },
             onSuccess: () => {
                 setDeleteDialogOpen(false);
                 setDeletingMachine(null);
             },
+            onError: (err) => {
+                setDeleteDialogError(err.error || 'Failed to delete machine');
+            },
         });
-    };
-
-    const handleView = (machine: Machine) => {
-        router.visit(`/machines/${machine.id}`);
     };
 
     const getStatusIcon = (status: string) => {
@@ -162,10 +145,10 @@ const MachinesList: React.FC<MachinesListProps> = ({ machines: propMachines, pro
     const machineList = Array.isArray(machines) ? machines : machines.data || [];
 
     return (
-        <div className="space-y-6">
+        <div className="m-4 space-y-6">
             <div className="flex items-center justify-between">
                 <h1 className="text-3xl font-bold tracking-tight">Machines</h1>
-                <Button onClick={handleCreate}>
+                <Button onClick={MachineDialogOpen ? () => setMachineDialogOpen(false) : () => setMachineDialogOpen(true)}>
                     <Plus className="mr-2 h-4 w-4" />
                     Add Machine
                 </Button>
@@ -180,6 +163,7 @@ const MachinesList: React.FC<MachinesListProps> = ({ machines: propMachines, pro
 
             {flash?.success && (
                 <Alert>
+                    <CheckCircle2Icon />
                     <AlertDescription>{flash.success}</AlertDescription>
                 </Alert>
             )}
@@ -203,28 +187,32 @@ const MachinesList: React.FC<MachinesListProps> = ({ machines: propMachines, pro
 
                         <Select value={filterLineId} onValueChange={(value) => handleFilter('line_id', value)}>
                             <SelectTrigger>
-                                <SelectValue placeholder="All Production Lines" />
+                                <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                                {/* <SelectItem value="">All Lines</SelectItem>
-                                {productionLines.map((line: ProductionLine) => (
-                                    <SelectItem key={line.id} value={line.id.toString()}>
-                                        {line.name}
-                                    </SelectItem>
-                                ))} */}
+                                <SelectGroup>
+                                    <SelectItem value="all">All Production Lines</SelectItem>
+                                    {productionLines.map((line: ProductionLine) => (
+                                        <SelectItem key={line.id} value={line.id.toString()}>
+                                            {line.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectGroup>
                             </SelectContent>
                         </Select>
 
                         <Select value={filterStatus} onValueChange={(value) => handleFilter('status', value)}>
                             <SelectTrigger>
-                                <SelectValue placeholder="All Statuses" />
+                                <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                                {/* <SelectItem value="">All Statuses</SelectItem>
-                                <SelectItem value="running">Running</SelectItem>
-                                <SelectItem value="idle">Idle</SelectItem>
-                                <SelectItem value="maintenance">Maintenance</SelectItem>
-                                <SelectItem value="breakdown">Breakdown</SelectItem> */}
+                                <SelectGroup>
+                                    <SelectItem value="all">All Statuses</SelectItem>
+                                    <SelectItem value="running">Running</SelectItem>
+                                    <SelectItem value="idle">Idle</SelectItem>
+                                    <SelectItem value="maintenance">Maintenance</SelectItem>
+                                    <SelectItem value="breakdown">Breakdown</SelectItem>
+                                </SelectGroup>
                             </SelectContent>
                         </Select>
                     </div>
@@ -259,33 +247,13 @@ const MachinesList: React.FC<MachinesListProps> = ({ machines: propMachines, pro
                                         </TableCell>
                                         <TableCell>{machine.production_line?.name || machine.production_line?.name || '-'}</TableCell>
                                         <TableCell>
-                                            <Badge
-                                                variant={getStatusVariant(machine.status)}
-                                                className="cursor-pointer"
-                                                onClick={() => handleStatusUpdate(machine)}
-                                            >
+                                            <Badge variant={getStatusVariant(machine.status)} className="cursor-pointer">
                                                 {machine.status}
                                             </Badge>
                                         </TableCell>
                                         <TableCell className="text-center">{machine.ideal_cycle_time}</TableCell>
                                         <TableCell className="text-right">
                                             <div className="flex justify-end gap-1">
-                                                <TooltipProvider>
-                                                    <Tooltip>
-                                                        <TooltipTrigger asChild>
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                onClick={() => handleView(machine)}
-                                                                className="h-8 w-8"
-                                                            >
-                                                                <Eye className="h-4 w-4" />
-                                                            </Button>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent>View Details</TooltipContent>
-                                                    </Tooltip>
-                                                </TooltipProvider>
-
                                                 <TooltipProvider>
                                                     <Tooltip>
                                                         <TooltipTrigger asChild>
@@ -339,7 +307,8 @@ const MachinesList: React.FC<MachinesListProps> = ({ machines: propMachines, pro
                     {machines.last_page && machines.last_page > 1 && (
                         <div className="flex items-center justify-between p-4">
                             <p className="text-sm text-muted-foreground">
-                                Showing {machineList.length} of {machines.total} machines
+                                Showing {(machines.current_page - 1) * 10 + 1} - {(machines.current_page - 1) * 10 + machineList.length} of{' '}
+                                {machines.total} machines
                             </p>
                             <div className="flex gap-2">
                                 <Button
@@ -363,30 +332,41 @@ const MachinesList: React.FC<MachinesListProps> = ({ machines: propMachines, pro
                     )}
                 </CardContent>
             </Card>
-            {/* 
-            <MachineStatusDialog
-                open={statusDialogOpen}
+            <MachineDialog
+                open={MachineDialogOpen}
                 onClose={() => {
-                    setStatusDialogOpen(false);
+                    setMachineDialogOpen(false);
                     setSelectedMachine(null);
                 }}
-                onSave={handleStatusSave}
                 machine={selectedMachine}
-            /> */}
-
+                productionLines={productionLines}
+            />
             <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Delete Machine</AlertDialogTitle>
+                        {deleteDialogError && (
+                            <Alert variant="destructive">
+                                <AlertCircle className="h-4 w-4" />
+                                <AlertDescription>{deleteDialogError}</AlertDescription>
+                            </Alert>
+                        )}
                         <AlertDialogDescription>
                             Are you sure you want to delete "{deletingMachine?.name}"? This action cannot be undone.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel onClick={() => setDeletingMachine(null)}>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                            Delete
-                        </AlertDialogAction>
+                        <AlertDialogCancel
+                            onClick={() => {
+                                setDeletingMachine(null);
+                                setDeleteDialogError(null);
+                            }}
+                        >
+                            Cancel
+                        </AlertDialogCancel>
+                        <Button onClick={handleDelete} variant="destructive" disabled={deleteDialogProcessing}>
+                            {deleteDialogProcessing ? 'Deleting...' : 'Delete'}
+                        </Button>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>

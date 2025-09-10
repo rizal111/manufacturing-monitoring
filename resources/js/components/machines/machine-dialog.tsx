@@ -3,8 +3,10 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { useTypedForm } from '@/hooks/use-typed';
 import { AlertCircle } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { CreateMachineData, Machine, ProductionLine } from '../../types/production';
@@ -12,36 +14,38 @@ import { CreateMachineData, Machine, ProductionLine } from '../../types/producti
 interface MachineDialogProps {
     open: boolean;
     onClose: () => void;
-    onSave: () => void;
     machine?: Machine | null;
     productionLines: ProductionLine[];
 }
 
-const MachineDialog: React.FC<MachineDialogProps> = ({ open, onClose, onSave, machine, productionLines }) => {
-    const [loading, setLoading] = useState(false);
+const MachineDialog: React.FC<MachineDialogProps> = ({ open, onClose, machine, productionLines }) => {
     const [error, setError] = useState<string | null>(null);
-    const [formData, setFormData] = useState<CreateMachineData>({
+
+    const { data, setData, post, patch, processing } = useTypedForm<CreateMachineData>({
         production_line_id: 0,
         name: '',
         code: '',
         description: '',
+        status: 'idle',
         ideal_cycle_time: 60,
     });
 
     useEffect(() => {
         if (machine) {
-            setFormData({
+            setData({
                 production_line_id: machine.production_line_id,
                 name: machine.name,
                 code: machine.code,
+                status: machine.status,
                 description: machine.description || '',
                 ideal_cycle_time: machine.ideal_cycle_time,
             });
         } else {
-            setFormData({
+            setData({
                 production_line_id: productionLines[0]?.id || 0,
                 name: '',
                 code: '',
+                status: 'idle',
                 description: '',
                 ideal_cycle_time: 60,
             });
@@ -49,38 +53,40 @@ const MachineDialog: React.FC<MachineDialogProps> = ({ open, onClose, onSave, ma
     }, [machine, productionLines]);
 
     const handleInputChange = (field: keyof CreateMachineData, value: any) => {
-        setFormData((prev) => ({ ...prev, [field]: value }));
+        setData((prev) => ({ ...prev, [field]: value }));
     };
 
     const handleSubmit = async () => {
-        // try {
-        //     setLoading(true);
-        //     setError(null);
-        //     const response = machine ? await productionApi.updateMachine(machine.id, formData) : await productionApi.createMachine(formData);
-        //     if (response.success) {
-        //         onSave();
-        //         handleClose();
-        //     }
-        // } catch (err: any) {
-        //     setError(err.response?.data?.message || 'Failed to save machine');
-        // } finally {
-        //     setLoading(false);
-        // }
+        machine
+            ? patch(route('machines.update', machine.id), {
+                  onError: (error) => {
+                      setError(error.error || 'Failed to update machine');
+                  },
+              })
+            : post(route('machines.store'), {
+                  onSuccess: () => {
+                      handleClose();
+                  },
+                  onError: (error) => {
+                      setError(error.error || 'Failed to create machine');
+                  },
+              });
     };
 
     const handleClose = () => {
-        setFormData({
+        setData({
             production_line_id: 0,
             name: '',
             code: '',
             description: '',
+            status: 'idle',
             ideal_cycle_time: 60,
         });
         setError(null);
         onClose();
     };
 
-    const isFormValid = formData.name && formData.code && (formData.production_line_id ?? 0) > 0;
+    const isFormValid = data.name && data.code && (data.production_line_id ?? 0) > 0;
 
     return (
         <Dialog open={open} onOpenChange={handleClose}>
@@ -105,7 +111,7 @@ const MachineDialog: React.FC<MachineDialogProps> = ({ open, onClose, onSave, ma
                             Production Line <span className="text-red-500">*</span>
                         </Label>
                         <Select
-                            value={(formData.production_line_id ?? 0).toString()}
+                            value={(data.production_line_id ?? 0).toString()}
                             onValueChange={(value) => handleInputChange('production_line_id', parseInt(value))}
                         >
                             <SelectTrigger id="production-line">
@@ -127,7 +133,7 @@ const MachineDialog: React.FC<MachineDialogProps> = ({ open, onClose, onSave, ma
                         </Label>
                         <Input
                             id="name"
-                            value={formData.name}
+                            value={data.name}
                             onChange={(e) => handleInputChange('name', e.target.value)}
                             placeholder="e.g., Injection Molding Machine 1"
                         />
@@ -140,11 +146,44 @@ const MachineDialog: React.FC<MachineDialogProps> = ({ open, onClose, onSave, ma
                         </Label>
                         <Input
                             id="code"
-                            value={formData.code}
+                            value={data.code}
                             onChange={(e) => handleInputChange('code', e.target.value.toUpperCase())}
                             placeholder="e.g., AL-A-M1"
                         />
                         <p className="text-xs text-muted-foreground">Unique identifier (e.g., AL-A-M1)</p>
+                    </div>
+                    <div className="space-y-3">
+                        <Label>Status</Label>
+                        <RadioGroup
+                            value={data.status}
+                            onValueChange={(value) => handleInputChange('status', value as CreateMachineData['status'])}
+                            className="grid grid-cols-2 gap-2"
+                        >
+                            <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="running" id="running" />
+                                <Label htmlFor="running" className="cursor-pointer font-normal">
+                                    Running
+                                </Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="idle" id="idle" />
+                                <Label htmlFor="idle" className="cursor-pointer font-normal">
+                                    Idle
+                                </Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="maintenance" id="maintenance" />
+                                <Label htmlFor="maintenance" className="cursor-pointer font-normal">
+                                    Maintenance
+                                </Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="breakdown" id="breakdown" />
+                                <Label htmlFor="breakdown" className="cursor-pointer font-normal">
+                                    Breakdown
+                                </Label>
+                            </div>
+                        </RadioGroup>
                     </div>
 
                     <div className="grid gap-2">
@@ -153,7 +192,7 @@ const MachineDialog: React.FC<MachineDialogProps> = ({ open, onClose, onSave, ma
                         </Label>
                         <Textarea
                             id="description"
-                            value={formData.description}
+                            value={data.description}
                             onChange={(e) => handleInputChange('description', e.target.value)}
                             placeholder="Additional details about the machine..."
                             className="min-h-[80px]"
@@ -167,7 +206,7 @@ const MachineDialog: React.FC<MachineDialogProps> = ({ open, onClose, onSave, ma
                         <Input
                             id="cycle-time"
                             type="number"
-                            value={formData.ideal_cycle_time}
+                            value={data.ideal_cycle_time}
                             onChange={(e) => handleInputChange('ideal_cycle_time', parseInt(e.target.value) || 1)}
                             min={1}
                             max={3600}
@@ -178,11 +217,11 @@ const MachineDialog: React.FC<MachineDialogProps> = ({ open, onClose, onSave, ma
                 </div>
 
                 <DialogFooter>
-                    <Button type="button" variant="outline" onClick={handleClose} disabled={loading}>
+                    <Button type="button" variant="outline" onClick={handleClose} disabled={processing}>
                         Cancel
                     </Button>
-                    <Button type="button" onClick={handleSubmit} disabled={loading || !isFormValid}>
-                        {loading ? 'Saving...' : machine ? 'Update' : 'Create'}
+                    <Button type="button" onClick={handleSubmit} disabled={processing || !isFormValid}>
+                        {processing ? 'Saving...' : machine ? 'Update' : 'Create'}
                     </Button>
                 </DialogFooter>
             </DialogContent>

@@ -50,6 +50,7 @@ export interface CreateMachineData {
     production_line_id?: number;
     name: string;
     code: string;
+    status: 'running' | 'idle' | 'maintenance' | 'breakdown';
     description?: string;
     ideal_cycle_time: number;
 }

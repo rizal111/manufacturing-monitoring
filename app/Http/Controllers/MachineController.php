@@ -205,24 +205,26 @@ class MachineController extends Controller
     {
         try {
             // Check if machine has active production
-            $activeProduction = $machine->productionOutputs()
-                ->where('recorded_at', '>=', now()->subHour())
-                ->exists();
+            // $activeProduction = $machine->productionOutputs()
+            //     ->where('recorded_at', '>=', now()->subHour())
+            //     ->exists();
 
-            if ($activeProduction) {
-                return back()->withErrors([
-                    'error' => 'Cannot delete machine with recent production activity'
-                ]);
-            }
+            // if ($activeProduction) {
+            //     return back()->withErrors([
+            //         'error' => 'Cannot delete machine with recent production activity'
+            //     ]);
+            // }
 
             // Soft delete by setting is_active to false
-            $machine->update(['is_active' => false]);
+            // $machine->update(['is_active' => false]);
 
             // Update production line status
-            $machine->productionLine->updateStatus();
+            // $machine->productionLine->updateStatus();
+
+            $machine->delete();
 
             return redirect()->route('machines.index')
-                ->with('success', 'Machine deactivated successfully');
+                ->with('success', 'Machine deleted successfully');
         } catch (\Exception $e) {
             return back()->withErrors([
                 'error' => 'Failed to delete machine: ' . $e->getMessage()

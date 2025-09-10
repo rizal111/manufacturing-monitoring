@@ -415,7 +415,8 @@ const ProductionLinesList: React.FC<ProductionLinesListProps> = ({ productionLin
                 open={productionLineDialogOpen}
                 line={productionLine}
                 onClose={() => {
-                    setProductionLineDialogOpen(false), setProductionLine(null);
+                    setProductionLineDialogOpen(false);
+                    setProductionLine(null);
                 }}
             />
         </div>

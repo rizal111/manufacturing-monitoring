@@ -48,7 +48,7 @@ const ProductionLineDialog: React.FC<ProductionLineDialogProps> = ({ open, onClo
                 machines: [],
             });
         }
-    }, [line]);
+    }, [line, setData]);
 
     const handleInputChange = (field: keyof CreateProductionLineData, value: any) => {
         setData((prev) => ({ ...prev, [field]: value }));
@@ -91,23 +91,25 @@ const ProductionLineDialog: React.FC<ProductionLineDialogProps> = ({ open, onClo
     };
 
     const handleSubmit = async () => {
-        line
-            ? patch(route('production-lines.update', line.id), {
-                  onSuccess: () => {
-                      handleClose();
-                  },
-                  onError: (error) => {
-                      setError(error.error || 'Failed to update production line');
-                  },
-              })
-            : post(route('production-lines.store'), {
-                  onSuccess: () => {
-                      handleClose();
-                  },
-                  onError: (err) => {
-                      setError(err.code || 'Failed to create production line');
-                  },
-              });
+        if (line) {
+            patch(route('production-lines.update', line.id), {
+                onSuccess: () => {
+                    handleClose();
+                },
+                onError: (error) => {
+                    setError(error.error || 'Failed to update production line');
+                },
+            });
+        } else {
+            post(route('production-lines.store'), {
+                onSuccess: () => {
+                    handleClose();
+                },
+                onError: (err) => {
+                    setError(err.code || 'Failed to create production line');
+                },
+            });
+        }
     };
 
     const handleClose = () => {

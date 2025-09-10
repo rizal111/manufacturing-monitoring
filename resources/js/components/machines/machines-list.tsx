@@ -38,13 +38,21 @@ interface MachinesListProps {
 }
 
 const MachinesList: React.FC<MachinesListProps> = ({ machines: propMachines, productionLines: propProductionLines, filters: propFilters }) => {
-    const { props } = usePage<any>();
+    interface PageProps {
+        [key: string]: unknown; // Add index signature to satisfy Inertia's PageProps constraint
+    }
+
+    const { props } = usePage<PageProps>();
 
     // Use props from page or component props
     const machines = propMachines || props.machines;
-    const productionLines = propProductionLines || props.productionLines || [];
-    const filters = propFilters || props.filters || {};
-    const flash = props.flash || {};
+    const productionLines: ProductionLine[] = Array.isArray(propProductionLines)
+        ? propProductionLines
+        : Array.isArray(props.productionLines)
+          ? props.productionLines
+          : [];
+    const filters: { search?: string; line_id?: string; status?: string } = propFilters || props.filters || {};
+    const flash: { error?: string; success?: string } = props.flash || {};
 
     const [deleteDialogError, setDeleteDialogError] = useState<string | null>(null);
 
@@ -60,7 +68,7 @@ const MachinesList: React.FC<MachinesListProps> = ({ machines: propMachines, pro
     const [deleteDialogProcessing, setDeleteDialogProcessing] = useState(false);
 
     const handleFilter = (key: string, value: string) => {
-        const newFilters: any = {
+        const newFilters: { search?: string; line_id?: string; status?: string } = {
             ...filters,
             [key]: key !== 'search' && value == 'all' ? undefined : value || undefined,
         };
@@ -142,7 +150,11 @@ const MachinesList: React.FC<MachinesListProps> = ({ machines: propMachines, pro
         );
     }
 
-    const machineList = Array.isArray(machines) ? machines : machines.data || [];
+    const machineList = Array.isArray(machines)
+        ? machines
+        : machines && typeof machines === 'object' && 'data' in machines && Array.isArray((machines as { data: Machine[] }).data)
+          ? (machines as { data: Machine[] }).data
+          : [];
 
     return (
         <div className="m-4 space-y-6">

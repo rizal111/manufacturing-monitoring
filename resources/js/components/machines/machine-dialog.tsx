@@ -50,27 +50,29 @@ const MachineDialog: React.FC<MachineDialogProps> = ({ open, onClose, machine, p
                 ideal_cycle_time: 60,
             });
         }
-    }, [machine, productionLines]);
+    }, [machine, productionLines, setData]);
 
-    const handleInputChange = (field: keyof CreateMachineData, value: any) => {
+    const handleInputChange = <K extends keyof CreateMachineData>(field: K, value: CreateMachineData[K]) => {
         setData((prev) => ({ ...prev, [field]: value }));
     };
 
     const handleSubmit = async () => {
-        machine
-            ? patch(route('machines.update', machine.id), {
-                  onError: (error) => {
-                      setError(error.error || 'Failed to update machine');
-                  },
-              })
-            : post(route('machines.store'), {
-                  onSuccess: () => {
-                      handleClose();
-                  },
-                  onError: (error) => {
-                      setError(error.error || 'Failed to create machine');
-                  },
-              });
+        if (machine) {
+            patch(route('machines.update', machine.id), {
+                onError: (error) => {
+                    setError(error.error || 'Failed to update machine');
+                },
+            });
+        } else {
+            post(route('machines.store'), {
+                onSuccess: () => {
+                    handleClose();
+                },
+                onError: (error) => {
+                    setError(error.error || 'Failed to create machine');
+                },
+            });
+        }
     };
 
     const handleClose = () => {

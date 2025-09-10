@@ -20,8 +20,7 @@ export default function MachinesPage({ machines, productionLines }: MachinesPage
         <AppLayout breadcrumbs={breadcrumbConfig.machines.index}>
             <Head title="Machines" />
             <div className="container mx-auto py-6">
-                {/* <MachinesList initialMachines={machines} productionLines={productionLines} /> */}
-                <MachinesList />
+                <MachinesList machines={machines} productionLines={productionLines} />
             </div>
         </AppLayout>
     );

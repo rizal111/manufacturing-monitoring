@@ -15,12 +15,20 @@ import { Machine } from '../../types/production';
 interface MachineStatusDialogProps {
     open: boolean;
     onClose: () => void;
-    onSave: (status: string, data?: any) => void;
+    onSave: (
+        status: string,
+        data?: {
+            reason?: string;
+            description?: string;
+            category?: string;
+            is_planned?: boolean;
+            status?: string;
+        },
+    ) => void;
     machine: Machine | null;
 }
 
-const MachineStatusDialog: React.FC<MachineStatusDialogProps> = ({ open, onClose, onSave, machine }) => {
-    const [loading, setLoading] = useState(false);
+const MachineStatusDialog: React.FC<MachineStatusDialogProps> = ({ open, onClose, machine }) => {
     const [error, setError] = useState<string | null>(null);
     const [status, setStatus] = useState<string>('');
     const [reason, setReason] = useState('');
@@ -212,11 +220,11 @@ const MachineStatusDialog: React.FC<MachineStatusDialogProps> = ({ open, onClose
                 </div>
 
                 <DialogFooter>
-                    <Button type="button" variant="outline" onClick={handleClose} disabled={loading}>
+                    <Button type="button" variant="outline" onClick={handleClose}>
                         Cancel
                     </Button>
-                    <Button type="button" onClick={handleSubmit} disabled={loading || !status}>
-                        {loading ? 'Updating...' : 'Update Status'}
+                    <Button type="button" onClick={handleSubmit} disabled={!status}>
+                        Update Status
                     </Button>
                 </DialogFooter>
             </DialogContent>

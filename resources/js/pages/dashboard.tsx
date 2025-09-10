@@ -16,22 +16,22 @@ const chartConfig = {
     oee: {},
 } satisfies ChartConfig;
 
-const prodTrendChartConfig = {
-    total_produced: {
-        label: 'Produced',
-        color: 'var(--chart-1)',
-    },
-    total_rejected: {
-        label: 'Rejected',
-        color: 'var(--chart-5)',
-    },
-} satisfies ChartConfig;
+// const prodTrendChartConfig = {
+//     total_produced: {
+//         label: 'Produced',
+//         color: 'var(--chart-1)',
+//     },
+//     total_rejected: {
+//         label: 'Rejected',
+//         color: 'var(--chart-5)',
+//     },
+// } satisfies ChartConfig;
 
-const getShift: { [key: number]: string } = {
-    0: 'Morning',
-    8: 'Afternoon',
-    16: 'Night',
-};
+// const getShift: { [key: number]: string } = {
+//     0: 'Morning',
+//     8: 'Afternoon',
+//     16: 'Night',
+// };
 
 export default function Dashboard() {
     const oee = 89;
@@ -82,7 +82,6 @@ export default function Dashboard() {
 }
 
 const HalfRadialChart = ({
-    className,
     label,
     value,
     chartData,

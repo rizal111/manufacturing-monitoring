@@ -142,15 +142,15 @@ class ProductionLineController extends Controller
     {
         try {
             // Check if line has active schedules
-            $activeSchedules = $productionLine->productionSchedules()
-                ->whereIn('status', ['pending', 'in_progress'])
-                ->count();
+            // $activeSchedules = $productionLine->productionSchedules()
+            //     ->whereIn('status', ['pending', 'in_progress'])
+            //     ->count();
 
-            if ($activeSchedules > 0) {
-                return back()->withErrors([
-                    'error' => 'Cannot delete production line with active schedules'
-                ]);
-            }
+            // if ($activeSchedules > 0) {
+            //     return back()->withErrors([
+            //         'error' => 'Cannot delete production line with active schedules'
+            //     ]);
+            // }
 
             $productionLine->delete();
 

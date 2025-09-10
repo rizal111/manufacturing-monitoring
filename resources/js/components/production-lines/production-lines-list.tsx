@@ -1,7 +1,6 @@
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
     AlertDialog,
-    AlertDialogAction,
     AlertDialogCancel,
     AlertDialogContent,
     AlertDialogDescription,
@@ -16,7 +15,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { router, usePage } from '@inertiajs/react';
-import { AlertCircle, Copy, Edit, Filter, MoreVertical, Plus, Search, Trash2, X } from 'lucide-react';
+import { AlertCircle, CheckCircle2Icon, Copy, Edit, Filter, MoreVertical, Plus, Search, Trash2, X } from 'lucide-react';
 import React, { useCallback, useState } from 'react';
 import { ProductionLine } from '../../types/production';
 import ProductionLineDialog from './production-line-dialog';
@@ -49,11 +48,15 @@ const ProductionLinesList: React.FC<ProductionLinesListProps> = ({ productionLin
     const filters = propFilters || props.filters || {};
     const flash = props.flash || {};
 
-    const [ProductionLineDialogOpen, setProductionLineDialogOpen] = useState(false);
+    const [productionLineDialogOpen, setProductionLineDialogOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState(filters.search || '');
     const [statusFilter, setStatusFilter] = useState(filters.status || 'all');
     const [activeFilter, setActiveFilter] = useState(filters.is_active || 'all');
+
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [deleteDialogError, setDeleteDialogError] = useState<string | null>(null);
+    const [deleteDialogProcessing, setDeleteDialogProcessing] = useState(false);
+
     const [productionLine, setProductionLine] = useState<ProductionLine | null>(null);
     const [deletingLine, setDeletingLine] = useState<ProductionLine | null>(null);
     const [dropdownMenuAction, setDropdownMenuAction] = useState<DropdownMenuAction>({ action: '', data: {} });
@@ -68,8 +71,6 @@ const ProductionLinesList: React.FC<ProductionLinesListProps> = ({ productionLin
         if (newFilters.search !== '') queryParams.search = newFilters.search;
         if (newFilters.status !== 'all') queryParams.status = newFilters.status;
         if (newFilters.is_active !== 'all') queryParams.is_active = newFilters.is_active;
-
-        console.log('Applying filters:', queryParams);
 
         router.get(window.location.pathname, queryParams, {
             preserveState: true,
@@ -117,7 +118,6 @@ const ProductionLinesList: React.FC<ProductionLinesListProps> = ({ productionLin
     };
 
     const clearFilters = () => {
-        console.log(searchTerm);
         setSearchTerm('');
         setStatusFilter('all');
         setActiveFilter('all');
@@ -138,13 +138,19 @@ const ProductionLinesList: React.FC<ProductionLinesListProps> = ({ productionLin
     const handleDelete = () => {
         if (!deletingLine) return;
 
-        router.delete(`/production-lines/${deletingLine.id}`, {
+        router.delete(route('production-lines.destroy', deletingLine.id), {
+            onStart: () => {
+                setDeleteDialogProcessing(true);
+            },
+            onFinish: () => {
+                setDeleteDialogProcessing(false);
+            },
             onSuccess: () => {
                 setDeleteDialogOpen(false);
                 setDeletingLine(null);
             },
-            onError: () => {
-                // Error will be handled by flash messages
+            onError: (err) => {
+                setDeleteDialogError(err.error || 'Failed to delete machine');
             },
         });
     };
@@ -204,7 +210,7 @@ const ProductionLinesList: React.FC<ProductionLinesListProps> = ({ productionLin
     const lines = Array.isArray(productionLines) ? productionLines : productionLines.data || [];
 
     return (
-        <div className="space-y-6">
+        <div className="m-4 space-y-6">
             <div className="flex items-center justify-between">
                 <h1 className="text-3xl font-bold tracking-tight">Production Lines</h1>
                 <Button onClick={setProductionLineDialogOpen.bind(null, true)} className="flex items-center">
@@ -213,15 +219,16 @@ const ProductionLinesList: React.FC<ProductionLinesListProps> = ({ productionLin
                 </Button>
             </div>
 
-            {flash?.error && (
+            {flash?.error && !productionLineDialogOpen && !deleteDialogOpen ? (
                 <Alert variant="destructive">
                     <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>{flash.error}</AlertDescription>
+                    <AlertDescription>{props.errors.code}</AlertDescription>
                 </Alert>
-            )}
+            ) : null}
 
             {flash?.success && (
                 <Alert>
+                    <CheckCircle2Icon />
                     <AlertDescription>{flash.success}</AlertDescription>
                 </Alert>
             )}
@@ -379,27 +386,35 @@ const ProductionLinesList: React.FC<ProductionLinesListProps> = ({ productionLin
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Delete Production Line</AlertDialogTitle>
+                        {deleteDialogError && (
+                            <Alert variant="destructive">
+                                <AlertCircle className="h-4 w-4" />
+                                <AlertDescription>{deleteDialogError}</AlertDescription>
+                            </Alert>
+                        )}
                         <AlertDialogDescription>
                             Are you sure you want to delete "{deletingLine?.name}"? This action cannot be undone.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel onClick={() => setDeletingLine(null)}>Cancel</AlertDialogCancel>
-                        <Button onClick={handleDelete} variant="destructive" asChild>
-                            <AlertDialogAction asChild>
-                                <button>Delete</button>
-                            </AlertDialogAction>
+                        <AlertDialogCancel
+                            onClick={() => {
+                                setDeletingLine(null);
+                                setDeleteDialogError(null);
+                            }}
+                        >
+                            Cancel
+                        </AlertDialogCancel>
+                        <Button onClick={handleDelete} variant="destructive" disabled={deleteDialogProcessing}>
+                            {deleteDialogProcessing ? 'Deleting...' : 'Delete'}
                         </Button>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
             <ProductionLineDialog
-                open={ProductionLineDialogOpen}
+                open={productionLineDialogOpen}
                 line={productionLine}
                 onClose={() => {
-                    setProductionLineDialogOpen(false), setProductionLine(null);
-                }}
-                onSave={() => {
                     setProductionLineDialogOpen(false), setProductionLine(null);
                 }}
             />

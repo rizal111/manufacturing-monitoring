@@ -16,14 +16,11 @@ import { Card, CardContent } from '../ui/card';
 interface ProductionLineDialogProps {
     open: boolean;
     onClose: () => void;
-    onSave: () => void;
     line?: ProductionLine | null;
 }
 
-const ProductionLineDialog: React.FC<ProductionLineDialogProps> = ({ open, onClose, onSave, line }) => {
+const ProductionLineDialog: React.FC<ProductionLineDialogProps> = ({ open, onClose, line }) => {
     const [activeStep, setActiveStep] = useState(0);
-
-    const [error, setError] = useState<string | null>(null);
 
     const { data, setData, post, patch, processing } = useTypedForm<CreateProductionLineData>({
         name: '',
@@ -31,7 +28,7 @@ const ProductionLineDialog: React.FC<ProductionLineDialogProps> = ({ open, onClo
         description: '',
         machines: [],
     });
-
+    const [error, setError] = useState<string | null>(null);
     const [isAddMachinesNow, setIsAddMachinesNow] = useState(false);
 
     useEffect(() => {
@@ -62,6 +59,7 @@ const ProductionLineDialog: React.FC<ProductionLineDialogProps> = ({ open, onClo
             name: '',
             code: '',
             description: '',
+            status: 'idle',
             ideal_cycle_time: 0,
         };
 
@@ -99,15 +97,15 @@ const ProductionLineDialog: React.FC<ProductionLineDialogProps> = ({ open, onClo
                       handleClose();
                   },
                   onError: (error) => {
-                      setError(error.error || 'Failed to save production line');
+                      setError(error.error || 'Failed to update production line');
                   },
               })
             : post(route('production-lines.store'), {
                   onSuccess: () => {
                       handleClose();
                   },
-                  onError: (error) => {
-                      setError(error.error || 'Failed to save production line');
+                  onError: (err) => {
+                      setError(err.code || 'Failed to create production line');
                   },
               });
     };
@@ -119,7 +117,6 @@ const ProductionLineDialog: React.FC<ProductionLineDialogProps> = ({ open, onClo
             description: '',
         });
         setActiveStep(0);
-        setError(null);
         onClose();
     };
 
@@ -233,7 +230,7 @@ const ProductionLineDialog: React.FC<ProductionLineDialogProps> = ({ open, onClo
                         <div className="space-y-4">
                             <div className="space-y-3">
                                 <Label>Machine Setup</Label>
-                                <RadioGroup defaultValue="add" onValueChange={(value) => setIsAddMachinesNow(value === 'add')}>
+                                <RadioGroup defaultValue="manual" onValueChange={(value) => setIsAddMachinesNow(value === 'add')}>
                                     <div className="flex items-center space-x-2">
                                         <RadioGroupItem value="manual" id="manual" />
                                         <Label htmlFor="manual" className="cursor-pointer font-normal">

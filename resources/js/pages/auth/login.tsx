@@ -101,7 +101,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                             Log in
                         </Button>
 
-                        <Button className="mt-3 w-full" tabIndex={6} onClick={handleGuestLogin} disabled={loading}>
+                        <Button className="mt-3 w-full" tabIndex={6} onClick={handleGuestLogin} disabled={processing}>
                             {processing && <LoaderCircle className="h-4 w-4 animate-spin" />}
                             Continue as Guest
                         </Button>

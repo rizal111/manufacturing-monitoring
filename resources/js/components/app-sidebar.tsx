@@ -180,10 +180,10 @@ function NavFooter({ items }: { items: NavItem[] }) {
             {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild isActive={item.href === url} tooltip={item.title} size="sm">
-                        <Link href={item.href || '#'}>
+                        <a href={item.href || '#'}>
                             <item.icon className="h-4 w-4" />
                             <span>{item.title}</span>
-                        </Link>
+                        </a>
                     </SidebarMenuButton>
                 </SidebarMenuItem>
             ))}

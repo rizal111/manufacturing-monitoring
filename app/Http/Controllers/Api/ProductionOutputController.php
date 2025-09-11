@@ -1,4 +1,3 @@
-// app/Http/Controllers/Api/ProductionOutputController.php
 <?php
 
 namespace App\Http\Controllers\Api;

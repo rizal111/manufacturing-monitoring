@@ -1,9 +1,9 @@
 import { Head } from '@inertiajs/react';
 import { Label, PolarAngleAxis, PolarRadiusAxis, RadialBar, RadialBarChart } from 'recharts';
 
-import { AdvancedParetoChart } from '../components/dashboard/advancedParetoChart';
 import { TotalProductionGraph } from '../components/dashboard/productionTotal';
 
+import { AdvancedParetoChart } from '@/components/dashboard/advancedParetoChart';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartConfig, ChartContainer } from '@/components/ui/chart';
 import { breadcrumbs } from '@/config/breadcrumbs';
@@ -44,15 +44,15 @@ export default function Dashboard() {
         <AppLayout breadcrumbs={breadcrumbs.dashboard}>
             <Head title="Dashboard" />
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-                <div className="grid auto-rows-min gap-4 md:grid-cols-1">
+                <div className="grid auto-rows-min grid-cols-1 gap-4">
                     <div className="relative overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
                         <Card className="">
                             <CardHeader>
                                 <CardTitle>Overall Equipment Effectiveness</CardTitle>
                                 <CardDescription>Equipment Effectiveness Metric</CardDescription>
                             </CardHeader>
-                            <CardContent className="relative grid auto-rows-min gap-4 md:grid-cols-4">
-                                <HalfRadialChart label="Overall" chartData={chartData} value={oee} className="" />
+                            <CardContent className="relative grid auto-rows-min grid-cols-2 gap-4 xl:grid-cols-4">
+                                <HalfRadialChart label="Overall" chartData={chartData} value={oee} />
                                 <HalfRadialChart label="Availability" chartData={chartData} value={availability} />
                                 <HalfRadialChart label="Performance" chartData={chartData} value={performance} />
                                 <HalfRadialChart label="Quality" chartData={chartData} value={quality} />
@@ -61,7 +61,7 @@ export default function Dashboard() {
                     </div>
                 </div>
                 <TotalProductionGraph />
-                <div className="grid gap-4 overflow-hidden rounded-xl md:grid-cols-2 dark:border-sidebar-border">
+                <div className="grid gap-4 rounded-xl xl:grid-cols-2 dark:border-sidebar-border">
                     <div className="space-y-4">
                         <Card>
                             <MachineStatus />
@@ -74,6 +74,7 @@ export default function Dashboard() {
                             <TopIssues />
                         </Card>
                     </div>
+
                     <AdvancedParetoChart />
                 </div>
             </div>
@@ -90,7 +91,7 @@ const HalfRadialChart = ({
     return (
         <div className="relative h-[115px] w-full overflow-hidden">
             <ChartContainer config={chartConfig} className="mx-auto aspect-square w-[200px]" {...props}>
-                <RadialBarChart data={chartData} startAngle={180} endAngle={0} innerRadius={80} outerRadius={130}>
+                <RadialBarChart data={chartData} startAngle={180} endAngle={0} innerRadius={80} outerRadius={130} className="mx-auto">
                     <PolarRadiusAxis tick={false} tickLine={false} axisLine={false}>
                         <Label
                             content={({ viewBox }) => {

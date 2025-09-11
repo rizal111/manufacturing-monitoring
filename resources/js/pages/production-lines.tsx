@@ -1,4 +1,3 @@
-// resources/js/pages/production-lines/index.tsx
 import ProductionLinesList from '@/components/production-lines/production-lines-list';
 import { breadcrumbConfig } from '@/config/breadcrumbs';
 import AppLayout from '@/layouts/app-layout';

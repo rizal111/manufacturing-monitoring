@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingDown, TrendingUp } from 'lucide-react';
-import { Area, Bar, CartesianGrid, ComposedChart, Legend, Line, ResponsiveContainer, XAxis, YAxis } from 'recharts';
+import { Area, Bar, CartesianGrid, ComposedChart, Legend, Line, XAxis, YAxis } from 'recharts';
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from '../ui/chart';
 
 // Sample production data
@@ -134,7 +134,7 @@ export function TotalProductionGraph() {
     const trendPercentage = ((totalActual / totalPlanned - 1) * 100).toFixed(1);
 
     return (
-        <Card className="w-full">
+        <Card className="h-full w-full">
             <CardHeader>
                 <div className="flex items-center justify-between">
                     <div>
@@ -203,75 +203,73 @@ export function TotalProductionGraph() {
 
                 {/* Main Chart */}
                 <ChartContainer config={chartConfig} className="h-[450px] w-full">
-                    <ResponsiveContainer width="100%" height={400}>
-                        <ComposedChart data={productionData} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-                            <defs>
-                                <linearGradient id="actualGradient" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stopColor="var(--chart-2)" stopOpacity={0.8} />
-                                    <stop offset="100%" stopColor="var(--chart-2)" stopOpacity={0.1} />
-                                </linearGradient>
-                            </defs>
+                    <ComposedChart data={productionData} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+                        <defs>
+                            <linearGradient id="actualGradient" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stopColor="var(--chart-2)" stopOpacity={0.8} />
+                                <stop offset="100%" stopColor="var(--chart-2)" stopOpacity={0.1} />
+                            </linearGradient>
+                        </defs>
 
-                            <CartesianGrid vertical={false} />
+                        <CartesianGrid vertical={false} />
 
-                            <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                        <XAxis dataKey="date" tick={{ fontSize: 12 }} />
 
-                            <YAxis
-                                yAxisId="left"
-                                orientation="left"
-                                label={{
-                                    value: 'Production Units',
-                                    angle: -90,
-                                    position: 'insideLeft',
-                                    style: { textAnchor: 'middle', fontSize: 14 },
-                                }}
-                                tick={{ fontSize: 12 }}
-                            />
+                        <YAxis
+                            yAxisId="left"
+                            orientation="left"
+                            label={{
+                                value: 'Production Units',
+                                angle: -90,
+                                position: 'insideLeft',
+                                style: { textAnchor: 'middle', fontSize: 14 },
+                            }}
+                            tick={{ fontSize: 12 }}
+                        />
 
-                            <YAxis
-                                yAxisId="right"
-                                orientation="right"
-                                domain={[0, 100]}
-                                label={{
-                                    value: 'Efficiency (%)',
-                                    angle: 90,
-                                    position: 'insideRight',
-                                    style: { textAnchor: 'middle', fontSize: 14 },
-                                }}
-                                tick={{ fontSize: 12 }}
-                            />
+                        <YAxis
+                            yAxisId="right"
+                            orientation="right"
+                            domain={[0, 100]}
+                            label={{
+                                value: 'Efficiency (%)',
+                                angle: 90,
+                                position: 'insideRight',
+                                style: { textAnchor: 'middle', fontSize: 14 },
+                            }}
+                            tick={{ fontSize: 12 }}
+                        />
 
-                            <ChartTooltip content={<ChartTooltipContent />} />
+                        <ChartTooltip content={<ChartTooltipContent />} />
 
-                            <Legend wrapperStyle={{ paddingTop: '20px' }} />
+                        <Legend wrapperStyle={{ paddingTop: '20px' }} />
 
-                            {/* Planned Production - Bar */}
-                            <Bar yAxisId="left" dataKey="planned" fill="var(--chart-1)" name="Planned" radius={[4, 4, 0, 0]} />
+                        {/* Planned Production - Bar */}
+                        <Bar yAxisId="left" dataKey="planned" fill="var(--chart-1)" name="Planned" radius={[4, 4, 0, 0]} />
 
-                            {/* Actual Production - Area */}
-                            <Area
-                                yAxisId="left"
-                                type="natural"
-                                dataKey="actual"
-                                fill="url(#actualGradient)"
-                                stroke="var(--chart-2)"
-                                strokeWidth={2}
-                                name="Actual"
-                            />
+                        {/* Actual Production - Area */}
+                        <Area
+                            yAxisId="left"
+                            type="natural"
+                            dataKey="actual"
+                            fill="url(#actualGradient)"
+                            stroke="var(--chart-2)"
+                            strokeWidth={2}
+                            name="Actual"
+                        />
 
-                            {/* Efficiency Line */}
-                            <Line
-                                yAxisId="right"
-                                type="natural"
-                                dataKey="efficiency"
-                                stroke="var(--chart-3)"
-                                strokeWidth={2}
-                                dot={{ fill: 'var(--chart-3)' }}
-                                name="Efficiency %"
-                                activeDot={{ r: 6 }}
-                            />
-                        </ComposedChart>
-                    </ResponsiveContainer>
+                        {/* Efficiency Line */}
+                        <Line
+                            yAxisId="right"
+                            type="natural"
+                            dataKey="efficiency"
+                            stroke="var(--chart-3)"
+                            strokeWidth={2}
+                            dot={{ fill: 'var(--chart-3)' }}
+                            name="Efficiency %"
+                            activeDot={{ r: 6 }}
+                        />
+                    </ComposedChart>
                 </ChartContainer>
 
                 {/* Additional Metrics */}

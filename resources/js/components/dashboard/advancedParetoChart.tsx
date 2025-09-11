@@ -3,9 +3,8 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { Download } from 'lucide-react';
 import { useState } from 'react';
-import { Bar, CartesianGrid, ComposedChart, Legend, Line, ReferenceLine, ResponsiveContainer, XAxis, YAxis } from 'recharts';
+import { Bar, CartesianGrid, ComposedChart, Legend, Line, ReferenceLine, XAxis, YAxis } from 'recharts';
 
 // Sample data for downtime causes
 const rawData = [
@@ -67,10 +66,10 @@ export function AdvancedParetoChart() {
                     <CardTitle>Downtime Pareto Analysis</CardTitle>
                     <CardDescription>Identifying the vital few causes that contribute to 80% of downtime</CardDescription>
                 </div>
-                <Button variant="outline" size="sm">
+                {/* <Button variant="outline" size="sm">
                     <Download className="mr-2 h-4 w-4" />
                     Export
-                </Button>
+                </Button> */}
             </CardHeader>
             <CardContent>
                 <div className="mb-4 flex items-center gap-4">
@@ -81,93 +80,82 @@ export function AdvancedParetoChart() {
                         {eightyPercentIndex >= 0 && `First ${eightyPercentIndex + 1} causes account for 80% of total downtime`}
                     </div>
                 </div>
-
+                {/* FIXME - Not responsive wait for shadcn rechart 3 released */}
                 <ChartContainer config={chartConfig} className="w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <ComposedChart data={data} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-                            <defs>
-                                <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stopColor="var(--chart-1)" stopOpacity={0.8} />
-                                    <stop offset="100%" stopColor="var(--chart-1)" stopOpacity={0.3} />
-                                </linearGradient>
-                            </defs>
+                    <ComposedChart data={data} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+                        <defs>
+                            <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stopColor="var(--chart-1)" stopOpacity={0.8} />
+                                <stop offset="100%" stopColor="var(--chart-1)" stopOpacity={0.3} />
+                            </linearGradient>
+                        </defs>
 
-                            <CartesianGrid vertical={false} />
+                        <CartesianGrid vertical={false} />
 
-                            {/* X Axis */}
-                            <XAxis
-                                dataKey="cause"
-                                angle={-45}
-                                textAnchor="end"
-                                height={100}
-                                interval={0}
-                                tick={{ fontSize: 12 }}
-                                className="text-xs"
-                            />
+                        {/* X Axis */}
+                        <XAxis dataKey="cause" angle={-45} textAnchor="end" height={100} interval={0} tick={{ fontSize: 12 }} className="text-xs" />
 
-                            {/* Left Y Axis - Downtime */}
-                            <YAxis
-                                yAxisId="left"
-                                orientation="left"
-                                label={{
-                                    value: 'Downtime (hours)',
-                                    angle: -90,
-                                    position: 'insideLeft',
-                                    style: { textAnchor: 'middle', fontSize: 14 },
-                                }}
-                                tick={{ fontSize: 12 }}
-                            />
+                        {/* Left Y Axis - Downtime */}
+                        <YAxis
+                            yAxisId="left"
+                            orientation="left"
+                            label={{
+                                value: 'Downtime (hours)',
+                                angle: -90,
+                                position: 'insideLeft',
+                                style: { textAnchor: 'middle', fontSize: 14 },
+                            }}
+                            tick={{ fontSize: 12 }}
+                        />
 
-                            {/* Right Y Axis - Percentage */}
-                            <YAxis
+                        {/* Right Y Axis - Percentage */}
+                        <YAxis
+                            yAxisId="right"
+                            orientation="right"
+                            domain={[0, 100]}
+                            ticks={[0, 20, 40, 60, 80, 100]}
+                            label={{
+                                value: 'Cumulative Percentage (%)',
+                                angle: 90,
+                                position: 'insideRight',
+                                style: { textAnchor: 'middle', fontSize: 14 },
+                            }}
+                            tick={{ fontSize: 12 }}
+                        />
+
+                        {/* 80% Reference Line */}
+                        {showReferenceLine && (
+                            <ReferenceLine
                                 yAxisId="right"
-                                orientation="right"
-                                domain={[0, 100]}
-                                ticks={[0, 20, 40, 60, 80, 100]}
+                                y={80}
+                                stroke="var(--destructive)"
+                                strokeDasharray="5 5"
                                 label={{
-                                    value: 'Cumulative Percentage (%)',
-                                    angle: 90,
-                                    position: 'insideRight',
-                                    style: { textAnchor: 'middle', fontSize: 14 },
+                                    position: 'right',
+                                    style: { fill: 'var(--destructive)', fontSize: 12 },
                                 }}
-                                tick={{ fontSize: 12 }}
                             />
+                        )}
 
-                            {/* 80% Reference Line */}
-                            {showReferenceLine && (
-                                <ReferenceLine
-                                    yAxisId="right"
-                                    y={80}
-                                    stroke="var(--destructive)"
-                                    strokeDasharray="5 5"
-                                    label={{
-                                        position: 'right',
-                                        style: { fill: 'var(--destructive)', fontSize: 12 },
-                                    }}
-                                />
-                            )}
+                        <ChartTooltip content={<ChartTooltipContent />} />
 
-                            <ChartTooltip content={<ChartTooltipContent />} />
+                        <Legend wrapperStyle={{ paddingTop: '20px' }} iconType="rect" />
 
-                            <Legend wrapperStyle={{ paddingTop: '20px' }} iconType="rect" />
+                        {/* Bars for downtime */}
+                        <Bar yAxisId="left" dataKey="downtime" fill="var(--color-downtime)" radius={4} />
 
-                            {/* Bars for downtime */}
-                            <Bar yAxisId="left" dataKey="downtime" fill="var(--color-downtime)" radius={4} />
-
-                            {/* Line for cumulative percentage */}
-                            <Line
-                                yAxisId="right"
-                                type="natural"
-                                dataKey="cumulativePercentage"
-                                stroke="var(--color-cumulativePercentage)"
-                                strokeWidth={2}
-                                dot={{ fill: 'var(--color-cumulativePercentage)' }}
-                                activeDot={{ r: 6 }}
-                            />
-                        </ComposedChart>
-                    </ResponsiveContainer>
+                        {/* Line for cumulative percentage */}
+                        <Line
+                            yAxisId="right"
+                            type="natural"
+                            dataKey="cumulativePercentage"
+                            stroke="var(--color-cumulativePercentage)"
+                            strokeWidth={2}
+                            dot={{ fill: 'var(--color-cumulativePercentage)' }}
+                            activeDot={{ r: 6 }}
+                        />
+                    </ComposedChart>
                 </ChartContainer>
-
                 {/* Summary Statistics */}
                 <div className="mt-6 grid grid-cols-3 gap-4">
                     <div className="rounded-lg border p-4">

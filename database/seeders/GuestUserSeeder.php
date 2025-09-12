@@ -11,10 +11,12 @@ class GuestUserSeeder extends Seeder
     public function run()
     {
         User::updateOrCreate(
-            ['email' => 'guest@example.com'],
+            ['id' => 1],
             [
                 'name' => 'Guest User',
+                'email' => 'guest@example.com',
                 'password' => Hash::make('guest_password_' . env('APP_KEY')),
+                'email_verified_at' => now(),
             ]
         );
     }

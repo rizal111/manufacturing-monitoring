@@ -16,16 +16,16 @@ use Inertia\Inertia;
 class ProductionLineController extends Controller
 {
     public function __construct(
-        private RealTimeStatusService $statusService,
-        private OEECalculatorService $oeeService
+        // private RealTimeStatusService $statusService,
+        // private OEECalculatorService $oeeService
     ) {}
 
     public function index(Request $request)
     {
         $query = ProductionLine::with(['machines' => function ($query) {
-            $query->withCount(['downtimes' => function ($q) {
-                $q->whereNull('ended_at');
-            }]);
+            // $query->withCount(['downtimes' => function ($q) {
+            //     $q->whereNull('ended_at');
+            // }]);
         }]);
 
         // Apply filters
@@ -81,48 +81,48 @@ class ProductionLineController extends Controller
         }
     }
 
-    public function show(ProductionLine $productionLine)
-    {
-        $productionLine->load([
-            'machines' => function ($query) {
-                $query->withCount(['downtimes', 'productionOutputs'])
-                    ->with('currentStatusLog');
-            },
-            'productionSchedules' => function ($query) {
-                $query->whereIn('status', ['pending', 'in_progress'])
-                    ->orderBy('scheduled_start');
-            }
-        ]);
+    // public function show(ProductionLine $productionLine)
+    // {
+    //     $productionLine->load([
+    //         'machines' => function ($query) {
+    //             $query->withCount(['downtimes', 'productionOutputs'])
+    //                 ->with('currentStatusLog');
+    //         },
+    //         'productionSchedules' => function ($query) {
+    //             $query->whereIn('status', ['pending', 'in_progress'])
+    //                 ->orderBy('scheduled_start');
+    //         }
+    //     ]);
 
-        // Add summary statistics
-        $statistics = [
-            'total_machines' => $productionLine->machines->count(),
-            'active_machines' => $productionLine->machines->where('is_active', true)->count(),
-            'running_machines' => $productionLine->machines->where('status', 'running')->count(),
-            'current_downtimes' => $productionLine->machines->sum('downtimes_count'),
-            'upcoming_schedules' => $productionLine->productionSchedules->count(),
-        ];
+    //     // Add summary statistics
+    //     $statistics = [
+    //         'total_machines' => $productionLine->machines->count(),
+    //         'active_machines' => $productionLine->machines->where('is_active', true)->count(),
+    //         'running_machines' => $productionLine->machines->where('status', 'running')->count(),
+    //         'current_downtimes' => $productionLine->machines->sum('downtimes_count'),
+    //         'upcoming_schedules' => $productionLine->productionSchedules->count(),
+    //     ];
 
-        // Get OEE data for today
-        $oeeData = $this->oeeService->calculateLineOEE(
-            $productionLine,
-            Carbon::now()->startOfDay(),
-            Carbon::now()
-        );
+    //     // Get OEE data for today
+    //     $oeeData = $this->oeeService->calculateLineOEE(
+    //         $productionLine,
+    //         Carbon::now()->startOfDay(),
+    //         Carbon::now()
+    //     );
 
-        return Inertia::render('ProductionLines/Show', [
-            'productionLine' => $productionLine,
-            'statistics' => $statistics,
-            'oeeData' => $oeeData,
-        ]);
-    }
+    //     return Inertia::render('ProductionLines/Show', [
+    //         'productionLine' => $productionLine,
+    //         'statistics' => $statistics,
+    //         'oeeData' => $oeeData,
+    //     ]);
+    // }
 
-    public function edit(ProductionLine $productionLine)
-    {
-        return Inertia::render('ProductionLines/Edit', [
-            'productionLine' => $productionLine->load('machines'),
-        ]);
-    }
+    // public function edit(ProductionLine $productionLine)
+    // {
+    //     return Inertia::render('ProductionLines/Edit', [
+    //         'productionLine' => $productionLine->load('machines'),
+    //     ]);
+    // }
 
     public function update(UpdateProductionLineRequest $request, ProductionLine $productionLine)
     {

@@ -19,8 +19,8 @@ use Inertia\Inertia;
 class MachineController extends Controller
 {
     public function __construct(
-        private OEECalculatorService $oeeService,
-        private DowntimeAnalysisService $downtimeService
+        // private OEECalculatorService $oeeService,
+        // private DowntimeAnalysisService $downtimeService
     ) {}
 
     public function index(Request $request)
@@ -62,16 +62,16 @@ class MachineController extends Controller
         ]);
     }
 
-    public function create()
-    {
-        $productionLines = ProductionLine::where('is_active', true)
-            ->orderBy('name')
-            ->get();
+    // public function create()
+    // {
+    //     $productionLines = ProductionLine::where('is_active', true)
+    //         ->orderBy('name')
+    //         ->get();
 
-        return Inertia::render('Machines/Create', [
-            'productionLines' => $productionLines,
-        ]);
-    }
+    //     return Inertia::render('machines/reate', [
+    //         'productionLines' => $productionLines,
+    //     ]);
+    // }
 
     public function store(StoreMachineRequest $request)
     {
@@ -103,72 +103,72 @@ class MachineController extends Controller
         }
     }
 
-    public function show(Machine $machine)
-    {
-        $machine->load([
-            'productionLine',
-            'currentStatusLog',
-            'statusLogs' => function ($query) {
-                $query->latest()->limit(10);
-            },
-            'downtimes' => function ($query) {
-                $query->latest()->limit(5);
-            },
-            'productionOutputs' => function ($query) {
-                $query->latest()->limit(10);
-            }
-        ]);
+    // public function show(Machine $machine)
+    // {
+    //     $machine->load([
+    //         'productionLine',
+    //         'currentStatusLog',
+    //         'statusLogs' => function ($query) {
+    //             $query->latest()->limit(10);
+    //         },
+    //         'downtimes' => function ($query) {
+    //             $query->latest()->limit(5);
+    //         },
+    //         'productionOutputs' => function ($query) {
+    //             $query->latest()->limit(10);
+    //         }
+    //     ]);
 
-        // Add statistics
-        $statistics = [
-            'total_production_today' => $machine->productionOutputs()
-                ->whereDate('recorded_at', today())
-                ->sum('quantity_produced'),
-            'total_rejects_today' => $machine->productionOutputs()
-                ->whereDate('recorded_at', today())
-                ->sum('quantity_rejected'),
-            'downtime_hours_week' => round($machine->downtimes()
-                ->where('started_at', '>=', now()->startOfWeek())
-                ->sum('duration') / 3600, 2),
-            'status_duration' => $machine->currentStatusDuration(),
-        ];
+    //     // Add statistics
+    //     $statistics = [
+    //         'total_production_today' => $machine->productionOutputs()
+    //             ->whereDate('recorded_at', today())
+    //             ->sum('quantity_produced'),
+    //         'total_rejects_today' => $machine->productionOutputs()
+    //             ->whereDate('recorded_at', today())
+    //             ->sum('quantity_rejected'),
+    //         'downtime_hours_week' => round($machine->downtimes()
+    //             ->where('started_at', '>=', now()->startOfWeek())
+    //             ->sum('duration') / 3600, 2),
+    //         'status_duration' => $machine->currentStatusDuration(),
+    //     ];
 
-        // Get OEE data
-        $oeeData = $this->oeeService->calculateMachineOEE(
-            $machine,
-            Carbon::now()->startOfDay(),
-            Carbon::now()
-        );
+    //     // Get OEE data
+    //     // $oeeData = $this->oeeService->calculateMachineOEE(
+    //     //     $machine,
+    //     //     Carbon::now()->startOfDay(),
+    //     //     Carbon::now()
+    //     // );
 
-        // Get reliability data
-        $mtbf = $this->downtimeService->getMTBF($machine, now()->startOfMonth(), now());
-        $mttr = $this->downtimeService->getMTTR($machine, now()->startOfMonth(), now());
+    //     // Get reliability data
+    //     // $mtbf = $this->downtimeService->getMTBF($machine, now()->startOfMonth(), now());
+    //     // $mttr = $this->downtimeService->getMTTR($machine, now()->startOfMonth(), now());
 
-        $reliabilityData = [
-            'mtbf' => $mtbf,
-            'mttr' => $mttr,
-            'availability' => $mtbf > 0 ? round(($mtbf / ($mtbf + $mttr)) * 100, 2) : 0,
-        ];
+    //     // $reliabilityData = [
+    //     //     'mtbf' => $mtbf,
+    //     //     'mttr' => $mttr,
+    //     //     'availability' => $mtbf > 0 ? round(($mtbf / ($mtbf + $mttr)) * 100, 2) : 0,
+    //     // ];
 
-        return Inertia::render('Machines/Show', [
-            'machine' => $machine,
-            'statistics' => $statistics,
-            'oeeData' => $oeeData,
-            'reliabilityData' => $reliabilityData,
-        ]);
-    }
+    //     return Inertia::render('machines/Show', [
+    //         'machine' => $machine,
+    //         'statistics' => $statistics,
+    //         // 'oeeData' => $oeeData,
+    //         // 'reliabilityData' => $reliabilityData,
+    //     ]);
+    // }
 
-    public function edit(Machine $machine)
-    {
-        $productionLines = ProductionLine::where('is_active', true)
-            ->orderBy('name')
-            ->get();
+    // public function edit(Machine $machine)
+    // {
+    //     $productionLines = ProductionLine::where('is_active', true)
+    //         ->orderBy('name')
+    //         ->get();
 
-        return Inertia::render('Machines/Edit', [
-            'machine' => $machine->load('productionLine'),
-            'productionLines' => $productionLines,
-        ]);
-    }
+    //     return Inertia::render('Machines/Edit', [
+    //         'machine' => $machine->load('productionLine'),
+    //         'productionLines' => $productionLines,
+    //     ]);
+    // }
 
     public function update(UpdateMachineRequest $request, Machine $machine)
     {

@@ -27,7 +27,7 @@ const sidebarNavItems: NavItem[] = [
 export default function SettingsLayout({ children }: PropsWithChildren) {
     const { props } = usePage<any>();
 
-    const filteredNavItems = sidebarNavItems.filter((item) => !(item.title === 'Password' && props.auth?.user?.id === 3));
+    const filteredNavItems = sidebarNavItems.filter((item) => !(item.title === 'Password' && props.auth?.user?.id === 1));
 
     // When server-side rendering, we only render the layout on the client...
     if (typeof window === 'undefined') {

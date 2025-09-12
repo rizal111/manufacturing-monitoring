@@ -120,7 +120,7 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                     </form>
                 </div>
 
-                {auth.user.id !== 3 && <DeleteUser />}
+                {auth.user.id !== 1 && <DeleteUser />}
             </SettingsLayout>
         </AppLayout>
     );

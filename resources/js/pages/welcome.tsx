@@ -43,7 +43,7 @@ export default function Welcome() {
                         <div className="flex-1 rounded-br-lg rounded-bl-lg bg-white p-6 pb-12 text-[13px] leading-[20px] shadow-[inset_0px_0px_0px_1px_rgba(26,26,0,0.16)] lg:rounded-tl-lg lg:rounded-br-none lg:p-20 dark:bg-[#161615] dark:text-[#EDEDEC] dark:shadow-[inset_0px_0px_0px_1px_#fffaed2d]">
                             <h1 className="mb-1 text-2xl font-bold">Manufactoring Monitoring</h1>
                             <p className="mb-2 text-[#706f6c] dark:text-[#A1A09A]">
-                                the real-time, continuous tracking and analysis of manufacturing processes to provide immediate insights into
+                                The real-time, continuous tracking and analysis of manufacturing processes to provide immediate insights into
                                 performance, quality, and efficiency.
                             </p>
                         </div>
